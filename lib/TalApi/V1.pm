@@ -33,7 +33,7 @@ sub is_authenticated {
     set auth_realm => '';
     set auth_user => '';
 
-    my $header = auth_key() || return 0;
+    my $header = _auth_key() || return 0;
 
     my ($auth_method, $auth_string) = split(' ', $header);
     return 0 unless $auth_method eq 'Basic' && length $auth_string;
