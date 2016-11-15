@@ -12,3 +12,9 @@ $ make test
 To run
 
 $ plackup bin/app.psgi
+(defaults to listening at localhost port 5000
+
+To test
+
+$ curl -X GET http://localhost:5000/
+$ curl -X GET http://localhost:5000/api/v1
