@@ -1,5 +1,5 @@
 requires "Dancer2" => "0.204001";
-requires "Plack"   => 0";
+requires "Plack"   => "0";
 
 recommends "YAML"             => "0";
 recommends "URL::Encode::XS"  => "0";
