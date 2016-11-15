@@ -8,6 +8,7 @@ our $VERSION = '0.1';
 
 use Dancer2::Debugger;
 use MIME::Base64;
+use Encode;
 
 set serializer => 'JSON';
 
@@ -93,12 +94,17 @@ get '/' => sub {
 
     my $is_authenticated = http_basic_auth_check();
 
+    set charset => 'utf-8';
+
     +{
         tal_api             => 'v1',
         module_version      => $VERSION,
         auth_user           => setting('auth_user'),
         is_authenticated    => $is_authenticated,
-        auth_key            => _auth_key() . '',
+        auth_key            => _auth_key() // '',
+        utf8_cyrillic       => "cyrillic shcha \x{0429}",
+        utf8_symbols        => decode_utf8(" ⚒ ⚓ ⚔ ⚕ ⚖ ⚗ ⚘ ⚙"), # utf8 octets into perl characters
+        # utf8_test           => encode_utf8(""), # "\x{F8FF}", # 
     };
 };
 

@@ -1,0 +1,30 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Apache Tika CV testing",
+		"_postman_id": "1e86bfb1-c9ba-80c9-69e0-e7d82a5ae78a",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://localhost:9998/tika",
+			"request": {
+				"url": "http://localhost:9998/tika",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Acce",
+						"value": "text/plain",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "PUT CV doc, receive plain text content"
+			},
+			"response": []
+		}
+	]
+}
