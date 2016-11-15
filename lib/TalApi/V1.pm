@@ -3,8 +3,8 @@ use Dancer2;
 
 our $VERSION = '0.1';
 
-#use Dancer2::Plugin::Auth::Extensible;
-#use Dancer2::Plugin::Auth::HTTP::Basic::DWIW;
+# use Dancer2::Plugin::Auth::Extensible;
+# use Dancer2::Plugin::Auth::HTTP::Basic::DWIW;
 
 use Dancer2::Debugger;
 use MIME::Base64;

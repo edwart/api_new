@@ -51,6 +51,7 @@ TODO: {
   );
 
   module_boilerplate_ok('lib/TalApi.pm');
+  module_boilerplate_ok('lib/TalApi/V1.pm');
 
 
 }
