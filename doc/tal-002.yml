@@ -1,0 +1,249 @@
+swagger: '2.0'
+# https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
+
+# document metadata
+info:
+  version: "0.0.2 (2016-11-22)"
+  title: Beacon Talisman REST API
+  description: |
+    API for accessing Beacon Talisman recruitment software.
+  termsOfService: http://talisman-recruitment.com/terms/
+  contact:
+    name: info@talisman-recruitment.com
+  license:
+    name: Proprietary. All rights reserved. Copyright (c) Beacon Computers, Dunstable, UK, 2016.
+    url: http://talisman-recruitment.com/terms/
+# host:  tal-api.herokuapp.com
+host:  localhost:5000
+basePath: /api/v1
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+  # - application/xml
+produces:
+  - application/json
+  # - application/xml
+
+
+# Proof of Concept scope
+#
+# TAL-001. Registered candidate updates availability date.
+# As a registered KeyApps candidate, I want to update my availability date via the app, so that Optima consultants can see in Talisman the date from which I will be available to work.
+
+# TAL-002. View open Talisman jobs.
+# As a KeyApps app user, I want to dynamically view recent open Talisman jobs, so that I can apply for them.
+
+paths:
+  /:
+    get:
+      summary: Get Talisman API version information
+      description: ""
+      responses:
+        200:
+          description: Successful response
+          schema:
+            properties:
+              version:
+                type: string
+              api_version:
+                type: integer
+
+
+# TAL-001. Registered candidate updates availability date.
+
+  /candidateAvailability/{userId}/{candEmail}/{availableFromDate}:
+    post:
+      tags:
+        - candidate
+      summary: Update candidate availability
+      parameters:
+        - $ref: '#/parameters/userId'
+        - $ref: '#/parameters/candEmail'
+        - $ref: '#/parameters/availableFromDate'
+      responses:
+        '200':
+          description: success
+        '404':
+          description: candidate not found
+        '400':
+          description: invalid ID supplied
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+
+# TAL-002. View open Talisman jobs.
+
+  /openJobs:
+    get:
+      tags:
+        - job
+      summary: View open Talisman jobs
+      description: Returns an array of job nos for jobs that are currently open
+      responses:
+        '200':
+          description: successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/jobNo'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+
+
+  /job/{jobNo}:
+    get:
+      tags:
+      - job
+      summary: return details for a Talisman job identified by key job no
+      parameters:
+        - $ref: '#/parameters/jobNo'
+      responses:
+        '200':
+          description: job response
+          schema:
+            $ref: "#/definitions/job"
+        '404':
+          description: job not found
+        '400':
+          description: Invalid ID supplied
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+
+
+# Parameter definitions
+
+parameters:
+  userId:
+    description: KeyApps user_id
+    in: path
+    name: userId
+    required: true
+    type: string
+    # e.g. 6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1
+  # candNo:
+  #   description: candidate number
+  #   in: path
+  #   name: candNo
+  #   required: true
+  #   type: integer
+  candEmail:
+    description: candidate email
+    in: path
+    name: candEmail
+    required: true
+    type: string
+    pattern: '/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i' # http://www.regular-expressions.info/email.html
+  availableFromDate:
+    description: available from date
+    in: path
+    name: availableFromDate
+    required: true
+    type: string
+    format: date
+  jobNo:
+    description: job number
+    in: path
+    name: jobNo
+    required: true
+    type: integer
+
+# Schema definitions
+
+definitions:
+
+  errorModel:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+
+  # candNo:
+  #   description: candidate number
+  #   type: integer
+  #   format: int64
+
+  jobNo:
+    description: job number
+    type: integer
+    format: int64
+
+  job:
+    type: object
+    description: Talisman job record
+    properties:
+      external_job_id:
+        type: string
+      jb_job_no:
+        $ref: '#/definitions/jobNo'
+      jb_client_code:
+        type: string
+      jb_cont_code:
+        type: string
+      jb_date:
+        type: string
+        format: date
+      jb_consultant:
+        type: string
+      jb_job_desc:
+        type: string
+      jb_job_desc_full:
+        type: string
+      jb_job_status:
+        type: string # TODO enum
+      jb_address__1:
+        type: string
+      jb_address__2:
+        type: string
+      jb_address__3:
+        type: string
+      jb_address__4:
+        type: string
+      jb_address__5:
+        type: string
+      jb_postcode:
+        type: string
+      jb_branch:
+        type: string
+      jb_date_active:
+        type: string
+        format: date
+      jb_date_closed:
+        type: string
+        format: date
+      jb_date_expiry:
+        type: string
+        format: date
+      jb_start_date:
+        type: string
+        format: date
+      jb_end_date:
+        type: string
+        format: date
+      jb_raised_date:
+        type: string
+        format: date
+      # TODO more fields for salary / rate
+
+  # candidate:
+  #   type: object
+  #   description: Talisman candidate record
+  #   properties:
+  #     external_cand_id:
+  #       type: string
+  #     cand_cand_no:
+  #       $ref: '#/definitions/candNo'
+  #     cand_surname:
+  #       type: string
