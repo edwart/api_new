@@ -14,7 +14,21 @@ To run
 $ plackup bin/app.psgi
 (defaults to listening at localhost port 5000
 
-To test
+To test endpoint
 
 $ curl -X GET http://localhost:5000/
 $ curl -X GET http://localhost:5000/api/v1
+
+To run unit tests
+
+$ make test
+
+one test
+$ prove -Ilib t/003_v1_poc.t
+
+Development testing
+
+$ PLACK_ENV=test PERL5LIB=lib perl t/003_v1_poc.t
+
+with debugger
+$ PLACK_ENV=test PERL5LIB=lib perl -d t/003_v1_poc.t

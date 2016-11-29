@@ -161,10 +161,10 @@ definitions:
   errorModel:
     type: object
     required:
-      - code
+      - status
       - message
     properties:
-      code:
+      status:
         type: integer
         format: int32
       message:

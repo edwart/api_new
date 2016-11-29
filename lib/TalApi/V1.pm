@@ -6,9 +6,11 @@ our $VERSION = '0.1';
 # use Dancer2::Plugin::Auth::Extensible;
 # use Dancer2::Plugin::Auth::HTTP::Basic::DWIW;
 
-use Dancer2::Debugger;
+# use Dancer2::Debugger;
 use MIME::Base64;
 use Encode;
+use Date::Calc qw( check_date Today Date_to_Days );
+use Try::Tiny;
 
 set serializer => 'JSON';
 
@@ -90,7 +92,7 @@ Get Talisman API V1 debug information
 get '/' => sub {
 # returns  Talisman API version information
 
-    debug "in V1 /";
+    debug "V1 /";
 
     my $is_authenticated = http_basic_auth_check();
 
@@ -108,8 +110,83 @@ get '/' => sub {
     };
 };
 
+post '/candidateAvailability/:userId/:candEmail/:availableFromDate' => sub {
+# input path userId, candEmail, availableFromDate
+# // input body #/definitions/inputCandidateAvailability
+
+    debug "V1 /candidateAvailability";
+
+    my $user_id = route_parameters->get('userId') || send_error('expected userId', 400);
+    my $cand_email = route_parameters->get('candEmail') || send_error('expected candNo', 404);
+    my $available_from_date = route_parameters->get('availableFromDate') || send_error('expected availableFromDate', 400);
+
+    $user_id eq '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1' || send_error('invalid ID supplied',400);
+    if ( $cand_email eq 'go boom!' ) {
+        my $msg = encode_json({ code=>1234, message=>'foo' });
+        send_error( $msg, 500 );
+    }
+    $cand_email eq 'petere@beacon.co.uk' || send_error('candidate not found', 404);
+    # info "afd $available_from_date";
+    my ($y,$m,$d) = ( $available_from_date =~ m/(\d{4})-(\d{2})-(\d{2})/ ) or send_error('invalid availableFromDate format',400);
+    # info "y $y m $m d $d";
+    check_date($y,$m,$d) || send_error("invalid availableFromDate value: $y-$m-$d",400);
+    try {
+        Date_to_Days($y,$m,$d) >= Today() or send_error("invalid availableFromDate before today: $y-$m-$d",400);
+    } catch {
+        send_error("invalid availableFromDate: $_", 500);
+    };
+
+    warn "TODO: DBIC update cand_avail_date";
+
+    return { message => 'OK' };
+};
+
+get '/openJobs' => sub {
+
+    debug "V1 /openJobs";
+
+    warn "TODO: DBIC get job list";
+
+    +[ 1, 3, 5 ];
+};
+
+get '/job/:jobNo' => sub {
+
+    debug "V1 /job";
+
+    my $job_no = route_parameters->get('jobNo') || send_error('expected jobNo', 404);
+    debug "job_no $job_no";
+    if ( $job_no eq 'go boom!' ) {
+        my $msg = encode_json({ code=>1234, message=>'foo' });
+        send_error( $msg, 500 );
+    }
+    $job_no =~m/^\d+$/ or send_error("invalid jobNo not numeric: $job_no", 404);
+    $job_no > 0 or send_error("invalid jobNo not > 0: $job_no", 404);
+    $job_no eq '9999999999' && send_error("job not found: $job_no", 404);
+
+    warn "TODO: DBIC get job details";
+
+    +{
+        foo             => '1',
+    };
+};
+
+
+# future methods
+
+post '/candidateCompliance/:candNo' => sub {
+# input path candNo
+# input body #/definitions/inputCandidateCompliance
+
+    return "TODO";
+
+    my $cand_no = route_parameters->get('candNo') || send_error('expected candNo', 400);
+};
+
 # for development only
 get '/candidates' => sub {
+
+    return "TODO";
 
     debug "in V1 /candidates";
 
@@ -129,9 +206,26 @@ get '/candidates' => sub {
     ];
 };
 
+
+get '/candidate/:candNo' => sub {
+# input path candNo
+# returns #/definitions/candidate
+
+    return "TODO";
+
+    my $cand_no = route_parameters->get('candNo') || send_error('expected candNo', 400);
+
+    +{
+        cand_cand_no        => 1,
+        cand_surname        => 'Edwards',
+    };
+};
+
 post '/candidateAdd' => sub {
 # input body #/definitions/newCandidate
 # returns #/definitions/candidateQueueEntry
+
+    return "TODO";
 
     debug "in V1 /candidateAdd";
 
@@ -164,40 +258,7 @@ post '/candidateAdd' => sub {
     };
 };
 
-post '/candidateAvailability/:candNo' => sub {
-# input path candNo
-# input body #/definitions/inputCandidateAvailability
 
-    debug "in V1 /candidateAvailability";
-
-    my $cand_no = route_parameters->get('candNo') || send_error('expected candNo', 400);
-
-
-    return "";
-};
-
-get '/candidate/:candNo' => sub {
-# input path candNo
-# returns #/definitions/candidate
-
-    my $cand_no = route_parameters->get('candNo') || send_error('expected candNo', 400);
-
-    +{
-        cand_cand_no        => 1,
-        cand_surname        => 'Edwards',
-    };
-};
-
-# future methods
-
-post '/candidateCompliance/:candNo' => sub {
-# input path candNo
-# input body #/definitions/inputCandidateCompliance
-
-    my $cand_no = route_parameters->get('candNo') || send_error('expected candNo', 400);
-
-    return "";
-};
 
 true;
 
