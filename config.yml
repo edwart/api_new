@@ -64,3 +64,9 @@ template: "simple"
 #               - server
 #               - third_party
 
+plugins:
+  DBIC:
+    tal:
+      dsn: "dbi:mysql:dbname=Optima_test;host=jupiter"
+    test:
+      dsn: "dbi:SQLite:dbname=test.db"

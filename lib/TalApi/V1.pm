@@ -11,6 +11,8 @@ use MIME::Base64;
 use Encode;
 use Date::Calc qw( check_date Today Date_to_Days );
 use Try::Tiny;
+use Dancer2::Plugin::DBIC;
+
 
 set serializer => 'JSON';
 
@@ -116,8 +118,11 @@ post '/candidateAvailability/:userId/:candEmail/:availableFromDate' => sub {
 
     debug "V1 /candidateAvailability";
 
+    # e.g. 6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1
     my $user_id = route_parameters->get('userId') || send_error('expected userId', 400);
+    # e.g. petere@beacon.co.uk
     my $cand_email = route_parameters->get('candEmail') || send_error('expected candNo', 404);
+    # format "2016-11-29" RFC 3339
     my $available_from_date = route_parameters->get('availableFromDate') || send_error('expected availableFromDate', 400);
 
     $user_id eq '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1' || send_error('invalid ID supplied',400);
@@ -148,6 +153,11 @@ get '/openJobs' => sub {
     warn "TODO: DBIC get job list";
 
     +[ 1, 3, 5 ];
+};
+
+get 'allJobs' => sub {
+    my $schema = schema 'test';
+    my @jobs = $schema->resultset('job')->search( undef, { columns => [qw/ jb_job_no /] } );
 };
 
 get '/job/:jobNo' => sub {

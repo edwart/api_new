@@ -103,6 +103,9 @@ is_deeply( decode_json($res->content),
 	{ status => 500, title => 'Error 500 - Internal Server Error', message => '{"message":"foo","code":1234}' },
 	'error structure for invalid job' );
 
+$res = $test->request( GET '/allJobs' );
+ok( $res->is_success, '[API v1 GET /allJobs] successful' );
+diag explain $res->content;
 
 
 TODO: {
