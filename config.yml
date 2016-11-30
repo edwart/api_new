@@ -66,7 +66,25 @@ template: "simple"
 
 plugins:
   DBIC:
-    tal:
-      dsn: "dbi:mysql:dbname=Optima_test;host=jupiter"
+    # tal:
+    #   dsn: "dbi:mysql:dbname=Optima_test;host=jupiter"
     test:
-      dsn: "dbi:SQLite:dbname=test.db"
+      dsn: "dbi:SQLite:dbname=t/test.db"
+  Database:
+    connections:
+      test:
+        driver: SQLite
+        database: 't/test.db'
+      dev:
+        driver: 'mysql'
+        database: 'Optima_test'
+        host: 'jupiter'
+        port: 3306
+        username: 'root'
+        password: 'gemini2'
+        # connection_check_threshold: 10
+        dbi_params:
+            RaiseError: 1
+            AutoCommit: 1
+        on_connect_do: ["SET NAMES 'utf8'", "SET CHARACTER SET 'utf8'", "SET SQL_MODE='TRADITIONAL'" ]
+        log_queries: 1

@@ -25,3 +25,6 @@ startup_info: 1
 plugins:
   Debugger:
     enabled: 1
+
+dbname:
+  dev

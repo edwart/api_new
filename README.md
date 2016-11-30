@@ -21,14 +21,15 @@ $ curl -X GET http://localhost:5000/api/v1
 
 To run unit tests
 
-$ make test
+$  PLACK_ENV=test make test
 
 one test
-$ prove -Ilib t/003_v1_poc.t
+$ PLACK_ENV=test prove -Ilib t/003_v1_poc.t
 
 Development testing
 
 $ PLACK_ENV=test PERL5LIB=lib perl t/003_v1_poc.t
+$ PLACK_ENV=development PERL5LIB=lib perl t/003_v1_poc.t
 
 with debugger
 $ PLACK_ENV=test PERL5LIB=lib perl -d t/003_v1_poc.t

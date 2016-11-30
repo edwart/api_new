@@ -11,8 +11,12 @@ use MIME::Base64;
 use Encode;
 use Date::Calc qw( check_date Today Date_to_Days );
 use Try::Tiny;
-use Dancer2::Plugin::DBIC;
+use Dancer2::Plugin::Database;
 
+# our $schema = schema 'test';
+
+sub _dbh { database( config->{dbname} ) }
+# sub _dbh { database('test') }
 
 set serializer => 'JSON';
 
@@ -155,10 +159,14 @@ get '/openJobs' => sub {
     +[ 1, 3, 5 ];
 };
 
-get 'allJobs' => sub {
-    my $schema = schema 'test';
-    my @jobs = $schema->resultset('job')->search( undef, { columns => [qw/ jb_job_no /] } );
-};
+# get 'allJobs' => sub {
+#     # my $sth = $dbh->prepare();
+#     # $sth->execute();
+#     # my @jobs = $schema->resultset('job')->search(); # undef, { columns => [qw/ jb_job_no /] } );
+#     # return \@jobs;
+#     my $job_nos = _dbh()->selectcol_arrayref("select jb_job_no from job order by jb_job_no", undef);
+#     return $job_nos;
+# };
 
 get '/job/:jobNo' => sub {
 
