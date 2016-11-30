@@ -33,3 +33,6 @@ $ PLACK_ENV=development PERL5LIB=lib perl t/003_v1_poc.t
 
 with debugger
 $ PLACK_ENV=test PERL5LIB=lib perl -d t/003_v1_poc.t
+
+to see SQL statements
+$ DBI_TRACE=2 PLACK_ENV=test PERL5LIB=lib perl t/003_v1_poc.t

@@ -140,7 +140,7 @@ post '/candidateAvailability/:userId/:candEmail/:availableFromDate' => sub {
     # info "y $y m $m d $d";
     check_date($y,$m,$d) || send_error("invalid availableFromDate value: $y-$m-$d",400);
     try {
-        Date_to_Days($y,$m,$d) >= Today() or send_error("invalid availableFromDate before today: $y-$m-$d",400);
+        Date_to_Days($y,$m,$d) >= Date_to_Days(Today()) or send_error("invalid availableFromDate before today: $y-$m-$d",400);
     } catch {
         send_error("invalid availableFromDate: $_", 500);
     };
@@ -154,9 +154,25 @@ get '/openJobs' => sub {
 
     debug "V1 /openJobs";
 
-    warn "TODO: DBIC get job list";
+    my $today = sprintf "%04d-%02d-%02d", Today();
+    my $sql = <<EOM ;
+SELECT
+    jb_job_no
+FROM
+    job
+WHERE
+    jb_job_status in ("Open","Standing", "Urgent", "Unfilled")
+AND jb_date_active <= ?
+AND jb_date_closed < '1901-01-01'
+AND jb_start_date >= ?
+ORDER BY
+    jb_job_no
+EOM
+    my $job_nos = _dbh()->selectcol_arrayref( $sql, undef, $today, $today );
+    # info $job_nos;
+    return $job_nos;
 
-    +[ 1, 3, 5 ];
+    # +[ 1, 3, 5 ];
 };
 
 # get 'allJobs' => sub {
@@ -180,14 +196,20 @@ get '/job/:jobNo' => sub {
     }
     $job_no =~m/^\d+$/ or send_error("invalid jobNo not numeric: $job_no", 404);
     $job_no > 0 or send_error("invalid jobNo not > 0: $job_no", 404);
-    $job_no eq '9999999999' && send_error("job not found: $job_no", 404);
+    # $job_no eq '9999999999' && send_error("job not found: $job_no", 404);
 
-    warn "TODO: DBIC get job details";
+    my $sql = "SELECT * from job WHERE jb_job_no = ?";
+    my $job = _dbh()->selectrow_hashref($sql, undef, $job_no);
 
-    +{
-        foo             => '1',
-    };
+    $job->{jb_job_no} || send_error("job not found: $job_no", 404);
+
+    return $job;
+    # +{
+    #     foo             => '1',
+    # };
 };
+
+
 
 
 # future methods

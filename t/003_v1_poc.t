@@ -3,7 +3,7 @@ use warnings;
 
 use TalApi;
 use TalApi::V1;
-use Test::More tests => 22;
+use Test::More tests => 23;
 use Plack::Test;
 use HTTP::Request::Common;
 use JSON::MaybeXS;
@@ -81,19 +81,17 @@ is_deeply( decode_json($res->content),
 $res = $test->request( GET '/openJobs' );
 ok( $res->is_success, '[API v1 GET /openJobs] successful' );
 is_deeply( decode_json($res->content),
-	[ 1, 3, 5 ],
-	'job no list as expected' );
-
+	[10102,10107,10108,10109,10110,10111,10112,10113,10125],
+	'job no list as expected' ) or diag explain $res->content;
 
 # get /job/{jobNo}:
-$res = $test->request( GET '/job/1' );
-ok( $res->is_success, '[API v1 GET /job/1] successful' );
-# diag explain $res->content;
-is_deeply( decode_json($res->content),
-	{
-		foo => 1,
-	},
-	'job 1 content as expected' ) or diag explain $res->content;
+$res = $test->request( GET '/job/10110' );
+ok( $res->is_success, '[API v1 GET /job/10110] successful' );
+$dec = decode_json $res->content;
+is( $dec->{jb_client_ref}, "  AVL-2374-260", 'jb_client_ref');
+is( $dec->{jb_desc}, "DUCT MATE", 'jb_desc');
+is( $dec->{jb_rate_code__1}, "503", 'jb_rate_code__1') or diag explain $res->content;
+
 $res = $test->request( GET '/job/9999999999' );
 is( $res->code, 404, '404 job not found');
 
@@ -102,6 +100,7 @@ ok( ! $res->is_success, 'not success when error' );
 is_deeply( decode_json($res->content),
 	{ status => 500, title => 'Error 500 - Internal Server Error', message => '{"message":"foo","code":1234}' },
 	'error structure for invalid job' );
+
 
 # $res = $test->request( GET '/allJobs' );
 # ok( $res->is_success, '[API v1 GET /allJobs] successful' );
