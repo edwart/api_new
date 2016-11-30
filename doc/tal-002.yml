@@ -126,7 +126,7 @@ parameters:
     name: userId
     required: true
     type: string
-    # e.g. 6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1
+    # format e.g. 6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1
   # candNo:
   #   description: candidate number
   #   in: path
@@ -146,7 +146,7 @@ parameters:
     name: availableFromDate
     required: true
     type: string
-    format: date
+    format: date # format "2016-11-29" RFC 3339
   jobNo:
     description: job number
     in: path
