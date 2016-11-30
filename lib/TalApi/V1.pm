@@ -122,19 +122,15 @@ post '/candidateAvailability/:userId/:candEmail/:availableFromDate' => sub {
 
     debug "V1 /candidateAvailability";
 
-    # e.g. 6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1
+    # e.g. 6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1 # 36 characters
     my $user_id = route_parameters->get('userId') || send_error('expected userId', 400);
     # e.g. petere@beacon.co.uk
     my $cand_email = route_parameters->get('candEmail') || send_error('expected candNo', 404);
     # format "2016-11-29" RFC 3339
     my $available_from_date = route_parameters->get('availableFromDate') || send_error('expected availableFromDate', 400);
 
-    $user_id eq '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1' || send_error('invalid ID supplied',400);
-    if ( $cand_email eq 'go boom!' ) {
-        my $msg = encode_json({ code=>1234, message=>'foo' });
-        send_error( $msg, 500 );
-    }
-    $cand_email eq 'petere@beacon.co.uk' || send_error('candidate not found', 404);
+    # $user_id eq '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1' || send_error('invalid ID supplied',400);
+
     # info "afd $available_from_date";
     my ($y,$m,$d) = ( $available_from_date =~ m/(\d{4})-(\d{2})-(\d{2})/ ) or send_error('invalid availableFromDate format',400);
     # info "y $y m $m d $d";
@@ -145,9 +141,20 @@ post '/candidateAvailability/:userId/:candEmail/:availableFromDate' => sub {
         send_error("invalid availableFromDate: $_", 500);
     };
 
-    warn "TODO: DBIC update cand_avail_date";
+    if ( $cand_email eq 'go boom!' ) {
+        my $msg = encode_json({ code=>1234, message=>'foo' });
+        send_error( $msg, 500 );
+    }
 
-    return { message => 'OK' };
+    # $cand_email eq 'petere@beacon.co.uk' || send_error('candidate not found', 404);
+    my $sql = "SELECT cand_cand_no, cand_email from cands WHERE cand_email = ?"; # and cand_external_id = ?
+    my $cand = _dbh()->selectrow_hashref($sql, undef, $cand_email); # $user_id
+    $cand && $cand->{cand_email} eq $cand_email or send_error("cand not found by email: $cand_email", 404);
+
+    $sql = "UPDATE cands SET cand_avail = ? WHERE cand_email = ? AND cand_cand_no = ?";
+    my $count_updated = _dbh()->do( $sql, undef, $available_from_date, $cand_email, $cand->{cand_cand_no} );
+
+    return { message => 'OK', count => $count_updated };
 };
 
 get '/openJobs' => sub {
@@ -204,9 +211,7 @@ get '/job/:jobNo' => sub {
     $job->{jb_job_no} || send_error("job not found: $job_no", 404);
 
     return $job;
-    # +{
-    #     foo             => '1',
-    # };
+    # +{ foo => '1', };
 };
 
 

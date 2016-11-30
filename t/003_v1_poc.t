@@ -3,7 +3,7 @@ use warnings;
 
 use TalApi;
 use TalApi::V1;
-use Test::More tests => 23;
+use Test::More tests => 26;
 use Plack::Test;
 use HTTP::Request::Common;
 use JSON::MaybeXS;
@@ -51,31 +51,43 @@ is_sane_utf8($dec->{utf8_cyrillic});
 # is( $got_symbols, " ⚒ ⚓ ⚔ ⚕ ⚖ ⚗ ⚘ ⚙" );
 
 # post /candidateAvailability/{userId}/{candEmail}/{availableFromDate}
-my $keyapps_userid = '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1';
-my $cand_email = 'petere@beacon.co.uk';
+# two sample fixture datbase candidates
+#   cand_cand_no, cand_surname, cand_email, cand_external_id
+#   139000|Mccallum|nathanmccallum@yahoo.com|6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1
+#   139001|Ojoi|ojoimail.ru|ffffffff-b541-46ed-b7d9-2cfdc40b65b2
+
+my $keyapps_userid1 = '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1';
+my $cand_email1 = 'nathanmccallum@yahoo.com';
 my $available_from_date = sprintf '%04d-%02d-%02d', Add_Delta_Days( Today(), 5 ); # format "2016-11-29" RFC 3339
-my $request = sprintf '/candidateAvailability/%s/%s/%s', $keyapps_userid, $cand_email, $available_from_date;
+my $request = sprintf '/candidateAvailability/%s/%s/%s', $keyapps_userid1, $cand_email1, $available_from_date;
 $res = $test->request( POST $request );
 ok( $res->is_success, '[API v1 POST '.$request.'] successful' );
 # is_deeply( decode_json($res->content), {message => 'OK'}, 'response: {"message":"OK"}');
-is( $res->content, '{"message":"OK"}', 'response content: {"message":"OK"}');
+is( $res->content, '{"count":1,"message":"OK"}', 'response content: {"count":1,"message":"OK"}');
 
-$request = sprintf '/candidateAvailability/%s/%s/%s', $keyapps_userid, 'wrong_email', 'wrong_date';
+warn "TODO set date to not today for this cand";
+$request = sprintf '/candidateAvailability/%s/%s/%s', 'ffffffff-b541-46ed-b7d9-2cfdc40b65b2', 'ojoimail.ru', $available_from_date;
+$res = $test->request( POST $request );
+ok( $res->is_success, '[API v1 POST '.$request.'] successful' );
+is( $res->content, '{"count":1,"message":"OK"}', 'response content: {"count":1,"message":"OK"}');
+warn "TODO check date is now updated in SQLite database";
+
+$request = sprintf '/candidateAvailability/%s/%s/%s', $keyapps_userid1, 'wrong_email', $available_from_date;
 $res = $test->request( POST $request );
 is( $res->code, 404, '404 candidate not found');
 $request = sprintf '/candidateAvailability/%s/%s/%s', 'wrong_userid', 'wrong_email', 'wrong_date';
 $res = $test->request( POST $request );
 is( $res->code, 400, '400 invalid ID supplied');
-$request = sprintf '/candidateAvailability/%s/%s/%s', $keyapps_userid, $cand_email, 'wrong_date';
+$request = sprintf '/candidateAvailability/%s/%s/%s', $keyapps_userid1, $cand_email1, 'wrong_date';
 $res = $test->request( POST $request );
 is( $res->code, 400, '400 invalid availableFromDate');
 
-$request = sprintf '/candidateAvailability/%s/%s/%s', $keyapps_userid, 'go boom!', 'wrong_date';
+$request = sprintf '/candidateAvailability/%s/%s/%s', $keyapps_userid1, 'go boom!', $available_from_date;
 $res = $test->request( POST $request );
 ok( ! $res->is_success, 'not success when error' );
 is_deeply( decode_json($res->content),
 	{ status => 500, title => 'Error 500 - Internal Server Error', message => '{"message":"foo","code":1234}' },
-	'error structure for invalid candidateAvailability' );
+	'error structure for invalid candidateAvailability' ) or diag explain $res->content;
 
 # get /openJobs
 $res = $test->request( GET '/openJobs' );
