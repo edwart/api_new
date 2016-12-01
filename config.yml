@@ -63,6 +63,8 @@ template: "simple"
 #             roles:
 #               - server
 #               - third_party
+basic_auth_user: tal
+basic_auth_pass: test
 
 plugins:
   DBIC:

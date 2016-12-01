@@ -30,15 +30,15 @@ sub _auth_key {
     return request_header 'authorization'
 };
 
-=head2 is_authenticated
+=head2 http_basic_auth_check
 
-Is the session authenticated
+Is the session authenticated, using HTTP Basic authentication method
 
 Returns bool true if authenticated, else false.
 
 =cut
 
-sub is_authenticated {
+sub http_basic_auth_check {
     set auth_realm => '';
     set auth_user => '';
 
@@ -47,18 +47,16 @@ sub is_authenticated {
     my ($auth_method, $auth_string) = split(' ', $header);
     return 0 unless $auth_method eq 'Basic' && length $auth_string;
     set auth_realm  => 'Basic';
-    # die \400 unless $auth_method eq 'Basic';
-    # || send_error("Unauthorized", 401);
 
     my ($username, $password) = split(':', decode_base64($auth_string));
     return 0 unless defined $username && defined $password;
     set auth_user   => $username;
 
-    info auth_realm => setting 'auth_realm';
-    info auth_user => $username;
-    info auth_pass => $password;
+    # info auth_realm => setting 'auth_realm';
+    # info auth_user => $username;
+    # info auth_pass => $password;
 
-    return check_user_pass(setting('auth_realm'), setting('auth_user'), $password);
+    return check_realm_user_pass(setting('auth_realm'), setting('auth_user'), $password);
 }
 
 =head2 check_user_pass
@@ -69,23 +67,33 @@ Returns bool.
 
 =cut
 
-sub check_user_pass {
+sub check_realm_user_pass {
     my ($realm, $username, $password) = @_;
 
-    return 1 if $username eq 'tal' && $password eq 'test';
+    my $basic_auth_user = config->{basic_auth_user} // die 'define basic_auth_user in config';
+    my $basic_auth_pass = config->{basic_auth_pass} // die 'define basic_auth_pass in config';
+
+    return 1 if $realm eq 'Basic'
+             && $username eq $basic_auth_user
+             && $password eq $basic_auth_pass;
 
     return 0;
 }
 
-=head2 http_basic_auth_check
+=head2 send_unauthorized_unless_authenticated
 
-Is the session authenticated using HTTP Basic authentication
+Check whether authenticated, if not send an unauthorized response and stop immediately.
 
 =cut
 
-sub http_basic_auth_check {
-    return is_authenticated();
+sub send_unauthorized_unless_authenticated {
+
+    http_basic_auth_check()
+        || send_error("Unauthorized", 401);
+    # die \400 unless $auth_method eq 'Basic';
+    # || send_error("Unauthorized", 401);
 }
+
 
 # REST methods start here
 
@@ -111,7 +119,7 @@ get '/' => sub {
         is_authenticated    => $is_authenticated,
         auth_key            => _auth_key() // '',
         utf8_cyrillic       => "cyrillic shcha \x{0429}",
-        utf8_symbols        => decode_utf8(" ⚒ ⚓ ⚔ ⚕ ⚖ ⚗ ⚘ ⚙"), # utf8 octets into perl characters
+        utf8_symbols        => decode_utf8(" ⚒ ⚓ ⚔ ⚕ ⚖ ⚗ ⚘ ⚙"), # utf8 octets into perl characters; Dancer will serialize back to utf8 octets on output
         # utf8_test           => encode_utf8(""), # "\x{F8FF}", # 
     };
 };
@@ -121,6 +129,9 @@ post '/candidateAvailability/:userId/:candEmail/:availableFromDate' => sub {
 # // input body #/definitions/inputCandidateAvailability
 
     debug "V1 /candidateAvailability";
+
+    # TODO apply auth check automatically except for /, rather than duplicate in each path method
+    send_unauthorized_unless_authenticated();
 
     # e.g. 6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1 # 36 characters
     my $user_id = route_parameters->get('userId') || send_error('expected userId', 400);
@@ -161,6 +172,8 @@ get '/openJobs' => sub {
 
     debug "V1 /openJobs";
 
+    send_unauthorized_unless_authenticated();
+
     my $today = sprintf "%04d-%02d-%02d", Today();
     my $sql = <<EOM ;
 SELECT
@@ -194,6 +207,8 @@ EOM
 get '/job/:jobNo' => sub {
 
     debug "V1 /job";
+
+    send_unauthorized_unless_authenticated();
 
     my $job_no = route_parameters->get('jobNo') || send_error('expected jobNo', 404);
     debug "job_no $job_no";
