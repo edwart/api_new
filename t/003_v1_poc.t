@@ -159,3 +159,10 @@ for (
 		# is ( $res->code, 401, join(' ', '401 for '. $_->uri) );
 		is ( decode_json($res->content)->{message}, 'Unauthorized', 'Unauthorized '. $_->uri);
 	}
+
+# for testing with MySQL Optima_test copy
+# Optima sys/filedefs     PE  02/12/16 increase cand_external_id to length 36
+# to handle GUUIDs from KeyApps for Optima
+# mysql> ALTER TABLE `cands` CHANGE `cand_external_id` `cand_external_id` VARCHAR(36) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '';
+# mysql> update cands set cand_external_id = '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1', cand_email = 'nathanmccallum@yahoo.com' where cand_cand_no = 139000;
+# $ perl -d /usr/local/bin/plackup -E development bin/app.psgi
