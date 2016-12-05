@@ -67,11 +67,11 @@ basic_auth_user: tal
 basic_auth_pass: test
 
 plugins:
-  DBIC:
+  # DBIC:
     # tal:
     #   dsn: "dbi:mysql:dbname=Optima_test;host=jupiter"
-    test:
-      dsn: "dbi:SQLite:dbname=t/test.db"
+  #  test:
+  #     dsn: "dbi:SQLite:dbname=t/test.db"
   Database:
     connections:
       test:
@@ -80,7 +80,7 @@ plugins:
       dev:
         driver: 'mysql'
         database: 'Optima_test'
-        host: 'jupiter'
+        host: 'localhost'
         port: 3306
         username: 'root'
         password: 'gemini2'
