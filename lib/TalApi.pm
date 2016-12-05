@@ -22,9 +22,9 @@ Get top level information about Talisman API (API schema version number independ
 
 get '/' => sub {
 
-    #template 'index.tt'; # to send a templated web page
+    # template 'index.tt'; # to send a templated web page
 
-    return '<p>TalApi top level index web page.</p><p>There will be some Swagger.io fancy documentation here.</p>';
+    return '<html><body><p>TalApi top level index web page.</p><p>There will be some Swagger.io fancy documentation here.</p></body></html>';
 };
 
 true;
