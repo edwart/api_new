@@ -1,7 +1,7 @@
 package TalApi;
 use Dancer2;
 
-use Dancer2::Plugin::Debugger;
+#use Dancer2::Plugin::Debugger;
 
 # use Dancer2::Plugin::HTTP::Caching;
 # use Dancer2::Plugin::HTTP::ContentNegotiation;

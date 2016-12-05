@@ -70,8 +70,8 @@ Returns bool.
 sub check_realm_user_pass {
     my ($realm, $username, $password) = @_;
 
-    my $basic_auth_user = config->{basic_auth_user} // die 'define basic_auth_user in config';
-    my $basic_auth_pass = config->{basic_auth_pass} // die 'define basic_auth_pass in config';
+    my $basic_auth_user = config->{basic_auth_user} || die 'define basic_auth_user in config';
+    my $basic_auth_pass = config->{basic_auth_pass} || die 'define basic_auth_pass in config';
 
     return 1 if $realm eq 'Basic'
              && $username eq $basic_auth_user
@@ -117,9 +117,10 @@ get '/' => sub {
         module_version      => $VERSION,
         auth_user           => setting('auth_user'),
         is_authenticated    => $is_authenticated,
-        auth_key            => _auth_key() // '',
+        auth_key            => _auth_key() || '',
         utf8_cyrillic       => "cyrillic shcha \x{0429}",
-        utf8_symbols        => decode_utf8(" ⚒ ⚓ ⚔ ⚕ ⚖ ⚗ ⚘ ⚙"), # utf8 octets into perl characters; Dancer will serialize back to utf8 octets on output
+        #utf8_symbols        => decode_utf8(" ⚒ ⚓ ⚔ ⚕ ⚖ ⚗ ⚘ ⚙"), # utf8 octets into perl characters; Dancer will serialize back to utf8 octets on output. works on perl 5.16
+        utf8_symbols        => "\x{F8FF} \x{2692} \x{2693} \x{2694} \x{2695} \x{2696} \x{2697} \x{2698} \x{2699}", # perl characters using Unicode escapes, to keep perl 5.8.8 happy. equivalent of string in previous line
         # utf8_test           => encode_utf8(""), # "\x{F8FF}", # 
     };
 };
@@ -304,7 +305,7 @@ post '/candidateAdd' => sub {
     for ( qw( id username email salutation firstName middleNames lastName knownAs mobilePhone ) )
     {
         $newcand->{$_} = body_parameters->get($_)
-            // send_error("missing parameter $_", 405);
+            || send_error("missing parameter $_", 405);
     }
 
     # TODO write $newcand to Talisman newcandq table (like cvq)
