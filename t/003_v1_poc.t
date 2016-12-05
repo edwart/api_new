@@ -6,7 +6,7 @@ use warnings;
 
 use TalApi;
 use TalApi::V1;
-use Test::More tests => 36;
+use Test::More tests => 38;
 use Plack::Test;
 use HTTP::Request::Common;
 use JSON::MaybeXS;
@@ -116,10 +116,12 @@ is_deeply( decode_json($res->content),
 	'error structure for invalid candidateAvailability' ) or diag explain $res->content;
 
 # request: GET /openJobs
+# reset job start date for our expected test jobs
+$dbh->do( "UPDATE job SET jb_start_date = '$available_from_date' WHERE jb_job_no IN (10102,10107,10108,10109,10110,10111,10112,10113)", undef );
 $res = $test->request( GET '/openJobs', @auth_header );
 ok( $res->is_success, '[API v1 GET /openJobs] successful' );
 is_deeply( decode_json($res->content),
-	[10102,10107,10108,10109,10110,10111,10112,10113,10125],
+	[10102,10107,10108,10109,10110,10111,10112,10113],
 	'job no list as expected' ) or diag explain $res->content;
 
 # request: GET /job/{jobNo}:
@@ -164,5 +166,6 @@ for (
 # Optima sys/filedefs     PE  02/12/16 increase cand_external_id to length 36
 # to handle GUUIDs from KeyApps for Optima
 # mysql> ALTER TABLE `cands` CHANGE `cand_external_id` `cand_external_id` VARCHAR(36) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '';
-# mysql> update cands set cand_external_id = '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1', cand_email = 'nathanmccallum@yahoo.com' where cand_cand_no = 139000;
+# update cands set cand_external_id = '6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1', cand_email = 'nathanmccallum@yahoo.com', cand_surname = 'Mccallum' where cand_cand_no = 139000;
+# update cands set cand_external_id = 'ffffffff-b541-46ed-b7d9-2cfdc40b65b2', cand_email = 'ojoimail.ru', cand_surname = 'Ojoi' where cand_cand_no = # 139001;
 # $ perl -d /usr/local/bin/plackup -E development bin/app.psgi
