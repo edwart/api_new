@@ -27,5 +27,4 @@ plugins:
   Debugger:
     enabled: 1
 
-dbname:
-  test
+dbname: test
