@@ -8,133 +8,6 @@
 	},
 	"item": [
 		{
-			"name": "GET /cands",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							"tests[\"response code is 200\"] = responseCode.code === 200;",
-							"tests[\"Body contains authenticated\"] = responseBody.has(\"authenticated\");"
-						]
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": {
-						"username": "tal",
-						"password": "test",
-						"saveHelperData": true,
-						"showPassword": false
-					}
-				},
-				"url": "http://localhost:5000/api/v1/cands",
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Basic dGFsOnRlc3Q=",
-						"description": ""
-					}
-				],
-				"body": {
-					"mode": "formdata",
-					"formdata": []
-				},
-				"description": "This endpoint simulates a **basic-auth** protected endpoint. \nThe endpoint accepts a default username and password and returns a status code of `200 ok` only if the same is provided. \nOtherwise it will return a status code `401 unauthorized`.\n\n> Username: `tal`\n> \n> Password: `test`\n\nTo use this endpoint, send a request with the header `Authorization: Basic dGFsOnRlc3Q=`. \nThe cryptic latter half of the header value is a base64 encoded concatenation of the default username and password. \nUsing Postman, to send this request, you can simply fill in the username and password in the \"Authorization\" tab and Postman will do the rest for you.\n\nTo know more about basic authentication, refer to the [Basic Access Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication) wikipedia article.\nThe article on [authentication helpers](https://www.getpostman.com/docs/helpers#basic-auth?source=echo-collection-app-onboarding) elaborates how to use the same within the Postman app."
-			},
-			"response": [
-				{
-					"id": "70be7a5f-08aa-4173-9de7-cc08e5c06471",
-					"name": "200",
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "javascript",
-					"_postman_previewtype": "html",
-					"header": [
-						{
-							"name": "Access-Control-Allow-Credentials",
-							"key": "Access-Control-Allow-Credentials",
-							"value": "",
-							"description": ""
-						},
-						{
-							"name": "Access-Control-Allow-Headers",
-							"key": "Access-Control-Allow-Headers",
-							"value": "",
-							"description": ""
-						},
-						{
-							"name": "Access-Control-Allow-Methods",
-							"key": "Access-Control-Allow-Methods",
-							"value": "",
-							"description": ""
-						},
-						{
-							"name": "Access-Control-Allow-Origin",
-							"key": "Access-Control-Allow-Origin",
-							"value": "",
-							"description": ""
-						},
-						{
-							"name": "Connection",
-							"key": "Connection",
-							"value": "keep-alive",
-							"description": ""
-						},
-						{
-							"name": "Content-Encoding",
-							"key": "Content-Encoding",
-							"value": "gzip",
-							"description": ""
-						},
-						{
-							"name": "Content-Length",
-							"key": "Content-Length",
-							"value": "42",
-							"description": ""
-						},
-						{
-							"name": "Content-Type",
-							"key": "Content-Type",
-							"value": "application/json; charset=utf-8",
-							"description": ""
-						},
-						{
-							"name": "Date",
-							"key": "Date",
-							"value": "Sat, 31 Oct 2015 06:38:25 GMT",
-							"description": ""
-						},
-						{
-							"name": "Server",
-							"key": "Server",
-							"value": "nginx/1.6.2",
-							"description": ""
-						},
-						{
-							"name": "Vary",
-							"key": "Vary",
-							"value": "Accept-Encoding",
-							"description": ""
-						},
-						{
-							"name": "X-Powered-By",
-							"key": "X-Powered-By",
-							"value": "Sails <sailsjs.org>",
-							"description": ""
-						}
-					],
-					"cookie": [],
-					"responseTime": "377",
-					"body": "{\"authenticated\":true}"
-				}
-			]
-		},
-		{
 			"name": "GET /",
 			"event": [
 				{
@@ -185,15 +58,24 @@
 			"response": []
 		},
 		{
-			"name": "GET /cands NO AUTH failure",
+			"name": "GET /openJobs",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"tests[\"response code is 401\"] = responseCode.code === 401;",
-							"tests[\"Body contains Unauthorized\"] = responseBody.has(\"Unauthorized\");"
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
 						]
 					}
 				}
@@ -203,17 +85,17 @@
 					"type": "basic",
 					"basic": {
 						"username": "tal",
-						"password": "wrong",
+						"password": "test",
 						"saveHelperData": true,
 						"showPassword": false
 					}
 				},
-				"url": "http://localhost:5000/api/v1/cands",
+				"url": "http://localhost:5000/api/v1/openJobs",
 				"method": "GET",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Basic dGFsOndyb25n",
+						"value": "Basic dGFsOnRlc3Q=",
 						"description": ""
 					}
 				],
@@ -221,7 +103,357 @@
 					"mode": "formdata",
 					"formdata": []
 				},
-				"description": "This endpoint simulates a **basic-auth** protected endpoint. \nThe endpoint accepts a default username and password and returns a status code of `200 ok` only if the same is provided. \nOtherwise it will return a status code `401 unauthorized`.\n\n> Username: `tal`\n> \n> Password: `test`\n\nTo use this endpoint, send a request with the header `Authorization: Basic dGFsOnRlc3Q=`. \nThe cryptic latter half of the header value is a base64 encoded concatenation of the default username and password. \nUsing Postman, to send this request, you can simply fill in the username and password in the \"Authorization\" tab and Postman will do the rest for you.\n\nTo know more about basic authentication, refer to the [Basic Access Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication) wikipedia article.\nThe article on [authentication helpers](https://www.getpostman.com/docs/helpers#basic-auth?source=echo-collection-app-onboarding) elaborates how to use the same within the Postman app."
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /openJobs NO AUTH failure",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"username": "talwrong",
+						"password": "test",
+						"saveHelperData": true,
+						"showPassword": false
+					}
+				},
+				"url": "http://localhost:5000/api/v1/openJobs",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsd3Jvbmc6dGVzdA==",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /job/10101",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"username": "tal",
+						"password": "test",
+						"saveHelperData": true,
+						"showPassword": false
+					}
+				},
+				"url": "http://localhost:5000/api/v1/job/10101",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "POST /candidateAvailability/6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1/nathanmccallum@yahoo.com/2020-01-02",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"username": "tal",
+						"password": "test",
+						"saveHelperData": true,
+						"showPassword": false
+					}
+				},
+				"url": "http://localhost:5000/api/v1/candidateAvailability/6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1/nathanmccallum@yahoo.com/2020-01-02",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": "#   two sample fixture database candidates\n#     cand_cand_no, cand_surname, cand_email, cand_external_id\n#     139000|Mccallum|nathanmccallum@yahoo.com|6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1\n#     139001|Ojoi|ojoimail.ru|ffffffff-b541-46ed-b7d9-2cfdc40b65b2\n\nThe HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "tw4 GET /openJobs",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"username": "tal",
+						"password": "test",
+						"saveHelperData": true,
+						"showPassword": false
+					}
+				},
+				"url": "https://talisman-web4.com/talapi/optima-test/api/v1/openJobs",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "tw4 GET /",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"username": "tal",
+						"password": "test",
+						"saveHelperData": true,
+						"showPassword": false
+					}
+				},
+				"url": "https://talisman-web4.com/talapi/optima-test/",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "tw4 GET /api/v1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"username": "tal",
+						"password": "test",
+						"saveHelperData": true,
+						"showPassword": false
+					}
+				},
+				"url": "https://talisman-web4.com/talapi/optima-test/api/v1",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsMjp0ZXN0",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "tw4 POST /candidateAvailability/6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1/nathanmccallum@yahoo.com/2020-01-02 copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"username": "tal",
+						"password": "test",
+						"saveHelperData": true,
+						"showPassword": false
+					}
+				},
+				"url": "https://talisman-web4.com/talapi/optima-test/api/v1/candidateAvailability/6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1/nathanmccallum@yahoo.com/2020-01-02",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": "#   two sample fixture database candidates\n#     cand_cand_no, cand_surname, cand_email, cand_external_id\n#     139000|Mccallum|nathanmccallum@yahoo.com|6d4a1a52-b541-46ed-b7d9-2cfdc40b65b1\n#     139001|Ojoi|ojoimail.ru|ffffffff-b541-46ed-b7d9-2cfdc40b65b2\n\nThe HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
 			},
 			"response": []
 		}
