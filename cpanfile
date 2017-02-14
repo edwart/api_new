@@ -1,5 +1,9 @@
 requires "Dancer2" => "0.204001";
 requires "Plack"   => "0";
+requires "Dancer2::Plugin::Database" => "0";
+requires "DBD::SQLite" => "0";
+requires "HTTP::Server::Simple" => "0";
+requires "Plack::Handler::HTTP::Server::Simple" => "0";
 
 recommends "YAML"             => "0";
 recommends "URL::Encode::XS"  => "0";

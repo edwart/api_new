@@ -9,10 +9,15 @@ $ cpanm -S --installdeps .
 $ perl Makefile.PL
 $ make test
 
-To run
+To run in development environment
 
 $ plackup bin/app.psgi
 (defaults to listening at localhost port 5000
+
+To run in staging environment
+$ ./run-talapi.sh
+Plack logs requests to plack.access.log
+Dancer2 logs to logs/staging.log
 
 To test endpoint
 
