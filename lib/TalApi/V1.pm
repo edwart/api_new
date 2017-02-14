@@ -159,7 +159,8 @@ post '/candidateAvailability/:userId/:candEmail/:availableFromDate' => sub {
     }
 
     # $cand_email eq 'petere@beacon.co.uk' || send_error('candidate not found', 404);
-    my $sql = "SELECT cand_cand_no, cand_email from cands WHERE cand_email = ?"; # and cand_external_id = ?
+    my $sql = "SELECT cand_cand_no, cand_email from cands WHERE cand_email = ? ORDER BY cand_cand_no LIMIT 1"; # and cand_external_id = ?
+    #my $sql = "SELECT cand_cand_no, cand_email from cands WHERE cand_email = ?"; # and cand_external_id = ?
     my $cand = _dbh()->selectrow_hashref($sql, undef, $cand_email); # $user_id
     $cand && $cand->{cand_email} eq $cand_email or send_error("cand not found by email: $cand_email", 404);
 
