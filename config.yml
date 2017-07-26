@@ -14,19 +14,21 @@ layout: "main"
 # about unicode within your app when this setting is set (recommended).
 charset: "UTF-8"
 
-# template engine
-# simple: default and very basic template engine
-# template_toolkit: TT
+openapi:
+        config: "doc/tal-002.yml"
 
-template: "simple"
+engines:
+   logger:
+    Console:
+      log_format: "%d %l %m%n"
 
-# template: "template_toolkit"
-# engines:
-#   template:
-#     template_toolkit:
-#       ENCODING: utf8
-#       start_tag: '<%'
-#       end_tag:   '%>'
+template: "template_toolkit"
+engines:
+  template:
+    template_toolkit:
+      ENCODING: utf8
+      start_tag: '<%'
+      end_tag:   '%>'
 
 # session engine
 #
@@ -103,3 +105,7 @@ plugins:
             AutoCommit: 1
         on_connect_do: ["SET NAMES 'utf8'", "SET CHARACTER SET 'utf8'", "SET SQL_MODE='TRADITIONAL'" ]
         log_queries: 1
+
+plugins:
+  OpenAPI:
+     config: 'doc/tal-002.yml'

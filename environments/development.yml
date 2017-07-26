@@ -28,3 +28,4 @@ plugins:
 
 dbname: dev
 
+openapi_config: "doc/tal-002.yml"

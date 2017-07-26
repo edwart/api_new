@@ -1,30 +1,14 @@
 package TalApi;
 use Dancer2;
+use Dancer2::Plugin::OpenAPI;
 
-#use Dancer2::Plugin::Debugger;
-
-# use Dancer2::Plugin::HTTP::Caching;
-# use Dancer2::Plugin::HTTP::ContentNegotiation;
-# use Dancer2::Plugin::HTTP::ConditionalRequest;
-#use Dancer2::Plugin::HTTP::Auth::Extensible
-#use Dancer2::Plugin::HTTP::Auth::Handler;
-#use Dancer2::Plugin::HTTP::Cache 'CHI';
-
+use File::Basename qw/ dirname /;
+use Path::Tiny;
 our $VERSION = '0.1';
-
-set auto_page => 1;
-
-=head2 get /
-
-Get top level information about Talisman API (API schema version number independent).
-
-=cut
+my $apidata = openapi(url => "/home/tonye/tal-api/doc/tal-002.yml");
 
 get '/' => sub {
-
-    # template 'index.tt'; # to send a templated web page
-
-    return '<html><body><p>TalApi top level index web page.</p><p>There will be some Swagger.io fancy documentation here.</p></body></html>';
+template 'index.tt';
 };
 
 true;
