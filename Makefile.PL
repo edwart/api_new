@@ -9,9 +9,9 @@ $eumm_version =~ s/_//;
 
 WriteMakefile(
     NAME                => 'TalApi',
-    AUTHOR              => 'Peter Edwards <<peter@dragonstaff.co.uk>>',
+    AUTHOR              => q{YOUR NAME <youremail@example.com>},
     VERSION_FROM        => 'lib/TalApi.pm',
-    ABSTRACT_FROM       => 'lib/TalApi.pm',
+    ABSTRACT            => 'YOUR APPLICATION ABSTRACT',
     ($eumm_version >= 6.3001
       ? ('LICENSE'=> 'perl')
       : ()),
@@ -20,7 +20,6 @@ WriteMakefile(
         'Test::More' => 0,
         'YAML'       => 0,
         'Dancer2'     => 0.204001,
-        'version'    => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'TalApi-*' },

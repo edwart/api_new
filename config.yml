@@ -9,26 +9,31 @@ appname: "TalApi"
 # views/layouts/main.tt)
 layout: "main"
 
+logger: log4perl
+log: core
+engines:
+   logger:
+     log4perl:
+        config_file: log4perl.conf
+
 # when the charset is set to UTF-8 Dancer2 will handle for you
 # all the magic of encoding and decoding. You should not care
 # about unicode within your app when this setting is set (recommended).
 charset: "UTF-8"
 
-openapi:
-        config: "doc/tal-002.yml"
+# template engine
+# simple: default and very basic template engine
+# template_toolkit: TT
 
-engines:
-   logger:
-    Console:
-      log_format: "%d %l %m%n"
+template: "simple"
 
-template: "template_toolkit"
-engines:
-  template:
-    template_toolkit:
-      ENCODING: utf8
-      start_tag: '<%'
-      end_tag:   '%>'
+# template: "template_toolkit"
+# engines:
+#   template:
+#     template_toolkit:
+#       ENCODING: utf8
+#       start_tag: '<%'
+#       end_tag:   '%>'
 
 # session engine
 #
@@ -69,43 +74,13 @@ basic_auth_user: tal
 basic_auth_pass: test
 
 plugins:
-  # DBIC:
-    # tal:
-    #   dsn: "dbi:mysql:dbname=Optima_test;host=jupiter"
-  #  test:
-  #     dsn: "dbi:SQLite:dbname=t/test.db"
-  Database:
-    connections:
-      test:
-        driver: SQLite
-        database: 't/test.db'
-      dev:
-        driver: 'mysql'
-        database: 'Optima_test'
-        host: 'localhost'
-        port: 3306
-        username: 'root'
-        password: 'gemini2'
-        # connection_check_threshold: 10
-        dbi_params:
-            RaiseError: 1
-            AutoCommit: 1
-        on_connect_do: ["SET NAMES 'utf8'", "SET CHARACTER SET 'utf8'", "SET SQL_MODE='TRADITIONAL'" ]
-        log_queries: 1
-      prod:
-        driver: 'mysql'
-        database: 'Optima'
-        host: 'localhost'
-        port: 3306
-        username: 'root'
-        password: 'gemini2'
-        # connection_check_threshold: 10
-        dbi_params:
-            RaiseError: 1
-            AutoCommit: 1
-        on_connect_do: ["SET NAMES 'utf8'", "SET CHARACTER SET 'utf8'", "SET SQL_MODE='TRADITIONAL'" ]
-        log_queries: 1
-
-plugins:
   OpenAPI:
-     config: 'doc/tal-002.yml'
+    config: "config/tal-004.yml"
+    processedby: "process_query"
+    SQLLibrary:
+      config:
+        libraries:
+           mysql: "sql/mysql.sql"
+           beacon: "sql/beacon.sql"
+        mapping: "sql/mapping.sql"
+        datasource: "sql/source.yml"

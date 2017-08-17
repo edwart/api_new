@@ -1,6 +1,5 @@
 use strict;
 use warnings;
 
-use Test::More tests => 2;
+use Test::More tests => 1;
 use_ok 'TalApi';
-use_ok 'TalApi::V1';

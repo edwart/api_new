@@ -1,3 +1,3 @@
 ./stop-talapi.sh
-> logs/server.log
+rm logs/*
 ./start-talapi.sh

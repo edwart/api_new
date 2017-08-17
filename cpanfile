@@ -8,14 +8,14 @@ requires "Server::Starter" => "0";
 requires "Starman" => "0";
 requires "Net::Server::SS::PreFork" => "0";
 requires "MooseX::DataModel" => "0";
-requires "Dancer2::Plugin::Swagger2" => "0";
 requires "SQL::Library" => "0";
 requires "OpenAPI" => "0";
 requires "JSON::Validator::OpenAPI" => "0";
 requires "YAML::XS" => "0";
-requires "JSON::Validator::OpenAPI::Dancer2" => "0";
+requires "JSON::DWIW" => "0";
 requires "Server::Starter" => "0";
 requires "App::Ack" => "0";
+requires "HTTP::Tiny" => "0";
 
 recommends "YAML"             => "0";
 recommends "URL::Encode::XS"  => "0";

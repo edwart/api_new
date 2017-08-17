@@ -28,3 +28,4 @@ tmp
 Makefile.local
 .DS_Store
 .bundle
+/logs

@@ -54,7 +54,7 @@ paths:
 
 # TAL-001. Registered candidate updates availability date.
 
-  "/candidateAvailability/{userId}/{candEmail}/{availableFromDate}":
+  /candidateAvailability/{userId}/{candEmail}/{availableFromDate}:
     post:
       tags:
         - candidate
@@ -98,7 +98,7 @@ paths:
             $ref: '#/definitions/errorModel'
 
 
-  "/job/{jobNo}":
+  /job/{jobNo}:
     get:
       tags:
       - job
