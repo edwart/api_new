@@ -75,12 +75,12 @@ basic_auth_pass: test
 
 plugins:
   OpenAPI:
-    config: "config/tal-004.yml"
+    config: "config/talisman.json"
     processedby: "process_query"
     SQLLibrary:
       config:
         libraries:
            mysql: "sql/mysql.sql"
-           beacon: "sql/beacon.sql"
+           beacon: "sql/bespoke.sql"
         mapping: "sql/mapping.sql"
         datasource: "sql/source.yml"

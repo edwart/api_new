@@ -1,0 +1,442 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "0.0.2 (2016-11-22)",
+        "title": "Beacon Talisman REST API",
+        "description": "API for accessing Beacon Talisman recruitment software.\n",
+        "termsOfService": "http://talisman-recruitment.com/terms/",
+        "contact": {
+            "name": "info@talisman-recruitment.com"
+        },
+        "license": {
+            "name": "Proprietary. All rights reserved. Copyright (c) Beacon Computers, Dunstable, UK, 2016.",
+            "url": "http://talisman-recruitment.com/terms/"
+        }
+    },
+    "host": "localhost:5000",
+    "basePath": "/api/v1",
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "summary": "Get Talisman API version information",
+                "description": "Get Talisman API version information",
+                "operationId": "GetApiVersionInfo",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "properties": {
+                                "version": {
+                                    "type": "string"
+                                },
+                                "api_version": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/candidateAvailability/{userId}/{candEmail}/{availableFromDate}": {
+            "post": {
+                "tags": [
+                    "candidate"
+                ],
+                "summary": "Update candidate availability",
+                "operationId": "UpdateCandidateAvailability",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/userId"
+                    },
+                    {
+                        "$ref": "#/parameters/candEmail"
+                    },
+                    {
+                        "$ref": "#/parameters/availableFromDate"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success"
+                    },
+                    "400": {
+                        "description": "invalid ID supplied"
+                    },
+                    "404": {
+                        "description": "candidate not found"
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/errorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/ratecodes": {
+            "get": {
+                "tags": [
+                    "ratecode"
+                ],
+                "summary": "List Talisman rate codes ",
+                "description": "Returns an array of rate codes",
+                "operationId": "GetRateCodes",
+                "responses": {
+                    "200": {
+                        "description": "successful response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/jobNo"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/errorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/openJobs": {
+            "get": {
+                "tags": [
+                    "job"
+                ],
+                "summary": "View open Talisman jobs",
+                "description": "Returns an array of job nos for jobs that are currently open",
+                "operationId": "GetOpenJobs",
+                "responses": {
+                    "200": {
+                        "description": "successful response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/jobNo"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/errorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/job/{jobNo}": {
+            "get": {
+                "tags": [
+                    "job"
+                ],
+                "summary": "return details for a Talisman job identified by key job no",
+                "operationId": "GetJobDetails",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/jobNo"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "job response",
+                        "schema": {
+                            "$ref": "#/definitions/job"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplied"
+                    },
+                    "404": {
+                        "description": "job not found"
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/errorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings": {
+            "get": {
+                "tags": [
+                    "booking"
+                ],
+                "summary": "Returns bookings",
+                "operationId": "GetBookings",
+                "responses": {
+                    "200": {
+                        "description": "successful response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/jobNo"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/errorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookingtimesheets/{bookingNo}": {
+            "get": {
+                "tags": [
+                    "bookingtimesheets"
+                ],
+                "summary": "Returns timesheets for q booking",
+                "operationId": "GetBookingTimesheets",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/bookingNo"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "job response",
+                        "schema": {
+                            "$ref": "#/definitions/job"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplied"
+                    },
+                    "404": {
+                        "description": "job not found"
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/errorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/booking/{bookingNo}/{workweekEndDate}": {
+            "get": {
+                "tags": [
+                    "timesheet"
+                ],
+                "summary": "Returns rate codes, limits, pay rates for a booking, any existing timesheet detail record for that booking and workwkend",
+                "operationId": "GetBookingDetails",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/bookingNo"
+                    },
+                    {
+                        "$ref": "#/parameters/weekEndDate"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "job response",
+                        "schema": {
+                            "$ref": "#/definitions/job"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplied"
+                    },
+                    "404": {
+                        "description": "job not found"
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/errorModel"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "parameters": {
+        "userId": {
+            "description": "KeyApps user_id",
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "type": "string"
+        },
+        "candEmail": {
+            "description": "candidate email",
+            "in": "path",
+            "name": "candEmail",
+            "required": true,
+            "type": "string",
+            "pattern": "/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$/i"
+        },
+        "availableFromDate": {
+            "description": "available from date",
+            "in": "path",
+            "name": "availableFromDate",
+            "required": true,
+            "type": "string",
+            "format": "date"
+        },
+        "jobNo": {
+            "description": "job number",
+            "in": "path",
+            "name": "jobNo",
+            "required": true,
+            "type": "integer"
+        },
+        "bookingNo": {
+            "description": "Booking number",
+            "in": "path",
+            "name": "bookingNo",
+            "required": true,
+            "type": "integer"
+        },
+        "weekEndDate": {
+            "description": "Work Week End Date",
+            "in": "path",
+            "name": "weekEndDate",
+            "required": true,
+            "type": "string",
+            "format": "date"
+        }
+    },
+    "definitions": {
+        "errorModel": {
+            "type": "object",
+            "required": [
+                "status",
+                "message"
+            ],
+            "properties": {
+                "status": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "jobNo": {
+            "description": "job number",
+            "type": "integer",
+            "format": "int64"
+        },
+        "ratecode": {
+            "type": "object",
+            "description": "Talisman ratecodes record",
+            "properties": {
+                "rc_payrate_no": {
+                    "description": "payrate number ",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "rc_pay_type": {
+                    "description": "pay type ",
+                    "type": "string"
+                },
+                "rc_pay_tax": {
+                    "description": "pay tax ",
+                    "type": "string"
+                }
+            }
+        },
+        "job": {
+            "type": "object",
+            "description": "Talisman job record",
+            "properties": {
+                "external_job_id": {
+                    "type": "string"
+                },
+                "jb_job_no": {
+                    "$ref": "#/definitions/jobNo"
+                },
+                "jb_client_code": {
+                    "type": "string"
+                },
+                "jb_cont_code": {
+                    "type": "string"
+                },
+                "jb_date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "jb_consultant": {
+                    "type": "string"
+                },
+                "jb_job_desc": {
+                    "type": "string"
+                },
+                "jb_job_desc_full": {
+                    "type": "string"
+                },
+                "jb_job_status": {
+                    "type": "string"
+                },
+                "jb_address__1": {
+                    "type": "string"
+                },
+                "jb_address__2": {
+                    "type": "string"
+                },
+                "jb_address__3": {
+                    "type": "string"
+                },
+                "jb_address__4": {
+                    "type": "string"
+                },
+                "jb_address__5": {
+                    "type": "string"
+                },
+                "jb_postcode": {
+                    "type": "string"
+                },
+                "jb_branch": {
+                    "type": "string"
+                },
+                "jb_date_active": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "jb_date_closed": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "jb_date_expiry": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "jb_start_date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "jb_end_date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "jb_raised_date": {
+                    "type": "string",
+                    "format": "date"
+                }
+            }
+        }
+    }
+}

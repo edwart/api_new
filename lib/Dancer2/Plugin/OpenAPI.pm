@@ -17,9 +17,7 @@ register OpenAPI => sub {
     }
     my $app = $self->app;
     my $conf3 = $app->config;
-    warn Dumper { pluginconf => $conf, conf2 => $conf2, conf3 => $conf3 };
-    my $apiconfigfile = $conf->{apiconfigfile} || "doc/tal-002.yml";;
-    warn Dumper { apiconfigfile => $apiconfigfile };
+    my $apiconfigfile = $conf->{config};# || "doc/tal-002.yml";;
     my $obj = Dancer2::Plugin::OpenAPI::Core->new({ url => $apiconfigfile });
     my $apiconfig = $obj->get_apiconfig;
 
@@ -43,7 +41,7 @@ register OpenAPI => sub {
                                                    method => $http_method,
                                                    path => $path}); },
 
-                        );
+                        ) or die "Whoops: $!";
         }
     }
 

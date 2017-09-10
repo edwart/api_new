@@ -22,6 +22,9 @@ my $tt = new Template;
 
 our $VERSION = '0.1';
 
+sub GetApiVersionInfo {
+    return $apiconfig->{info};
+}
 sub process_query {
     my @passed = @_;
 
@@ -39,8 +42,8 @@ sub process_query {
     my $sql = undef;
     my $preprocessed = $queries->{ $sql_source }->{ $query };
     $tt->process(\$preprocessed, \%params, \$sql) or die $tt->error;
+
     debug to_dumper { preprocessed => $preprocessed, params => \%params, sql => $sql, passed => \@passed, query => $query };
-    Log::Log4perl->get_logger('SQL')->info($sql);
 
     Log::Log4perl->get_logger('SQL')->info($sql);
     return __run_query( query => $query,
