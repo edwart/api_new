@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "0.0.2 (2016-11-22)",
+        "version": "0.0.5",
         "title": "Beacon Talisman REST API",
         "description": "API for accessing Beacon Talisman recruitment software.\n",
         "termsOfService": "http://talisman-recruitment.com/terms/",
@@ -13,8 +13,8 @@
             "url": "http://talisman-recruitment.com/terms/"
         }
     },
-    "host": "localhost:5000",
-    "basePath": "/api/v1",
+    "host": "earth.beacon.co.uk",
+    "basePath": "/api/v5",
     "schemes": [
         "http",
         "https"
@@ -48,33 +48,23 @@
                 }
             }
         },
-        "/candidateAvailability/{userId}/{candEmail}/{availableFromDate}": {
-            "post": {
+        "/candidates": {
+            "get": {
                 "tags": [
-                    "candidate"
+                    "candidates"
                 ],
-                "summary": "Update candidate availability",
-                "operationId": "UpdateCandidateAvailability",
-                "parameters": [
-                    {
-                        "$ref": "#/parameters/userId"
-                    },
-                    {
-                        "$ref": "#/parameters/candEmail"
-                    },
-                    {
-                        "$ref": "#/parameters/availableFromDate"
-                    }
-                ],
+                "summary": "List Talisman candidates",
+                "description": "Returns an array of candidates ",
+                "operationId": "listcandidates",
                 "responses": {
                     "200": {
-                        "description": "success"
-                    },
-                    "400": {
-                        "description": "invalid ID supplied"
-                    },
-                    "404": {
-                        "description": "candidate not found"
+                        "description": "successful response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/jobNo"
+                            }
+                        }
                     },
                     "default": {
                         "description": "unexpected error",
@@ -85,7 +75,7 @@
                 }
             }
         },
-        "/ratecodes": {
+        "/rates": {
             "get": {
                 "tags": [
                     "ratecode"
@@ -102,67 +92,6 @@
                                 "$ref": "#/definitions/jobNo"
                             }
                         }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "schema": {
-                            "$ref": "#/definitions/errorModel"
-                        }
-                    }
-                }
-            }
-        },
-        "/openJobs": {
-            "get": {
-                "tags": [
-                    "job"
-                ],
-                "summary": "View open Talisman jobs",
-                "description": "Returns an array of job nos for jobs that are currently open",
-                "operationId": "GetOpenJobs",
-                "responses": {
-                    "200": {
-                        "description": "successful response",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/jobNo"
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "schema": {
-                            "$ref": "#/definitions/errorModel"
-                        }
-                    }
-                }
-            }
-        },
-        "/job/{jobNo}": {
-            "get": {
-                "tags": [
-                    "job"
-                ],
-                "summary": "return details for a Talisman job identified by key job no",
-                "operationId": "GetJobDetails",
-                "parameters": [
-                    {
-                        "$ref": "#/parameters/jobNo"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "job response",
-                        "schema": {
-                            "$ref": "#/definitions/job"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid ID supplied"
-                    },
-                    "404": {
-                        "description": "job not found"
                     },
                     "default": {
                         "description": "unexpected error",
@@ -199,12 +128,12 @@
                 }
             }
         },
-        "/bookingtimesheets/{bookingNo}": {
+        "/booking/{bookingNo}/timesheets": {
             "get": {
                 "tags": [
                     "bookingtimesheets"
                 ],
-                "summary": "Returns timesheets for q booking",
+                "summary": "Returns timesheets for booking",
                 "operationId": "GetBookingTimesheets",
                 "parameters": [
                     {
@@ -233,13 +162,41 @@
                 }
             }
         },
-        "/booking/{bookingNo}/{workweekEndDate}": {
+        "/timesheet": {
+            "post": {
+                "tags": [
+                    "newtimesheet"
+                ],
+                "summary": "New Timesheet",
+                "operationId": "NewTimesheet",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/bookingNo"
+                    },
+                    {
+                        "$ref": "#/parameters/timesheetdetailjson"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                            "description": "successful response"
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/errorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/timesheet/{bookingNo}": {
             "get": {
                 "tags": [
-                    "timesheet"
+                    "gettimesheet"
                 ],
-                "summary": "Returns rate codes, limits, pay rates for a booking, any existing timesheet detail record for that booking and workwkend",
-                "operationId": "GetBookingDetails",
+                "summary": "Get Timesheet",
+                "operationId": "GetTimesheet",
                 "parameters": [
                     {
                         "$ref": "#/parameters/bookingNo"
@@ -250,16 +207,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "job response",
-                        "schema": {
-                            "$ref": "#/definitions/job"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid ID supplied"
-                    },
-                    "404": {
-                        "description": "job not found"
+                            "description": "successful response"
                     },
                     "default": {
                         "description": "unexpected error",
@@ -316,9 +264,33 @@
             "required": true,
             "type": "string",
             "format": "date"
+        },
+        "timesheetdetailjson": {
+            "description": "JSON Structure of timesheet",
+            "in": "path",
+            "name": "timesheetdetailjson",
+            "required": true,
+            "type": "string"
         }
     },
     "definitions": {
+        "tableopts" : {
+            "type": "object",
+            "properties": {
+                "select": {
+                    "type": "string",
+                    "format": "int32"
+                },
+                "limit": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "page": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
         "errorModel": {
             "type": "object",
             "required": [

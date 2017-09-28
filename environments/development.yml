@@ -4,8 +4,8 @@
 # console: log messages to STDOUT (your console where you started the
 #          application server)
 # file:    log message to a file in log/
-#logger: "console"
-logger: "log4perl"
+logger: "console"
+#logger: "log4perl"
 # the log level for this environment
 # core is the lowest, it shows Dancer2's core log messages as well as yours
 # (debug, info, warning and error)
@@ -21,16 +21,16 @@ show_errors: 1
 
 # print the banner
 startup_info: 1
-engines:
-    logger:
-        log4perl:
-            config_file: "log4perl.conf"
+#engines:
+#    logger:
+#        log4perl:
+#            config_file: "log4perl.conf"
 plugins:
    Database:
       connections:
          mysql:
             driver: 'mysql'
-            database: 'Talisman_APItest'
+            database: 'Talisman_APITest2'
             host: 'localhost'
             port: 3306
             username: 'root'
@@ -38,7 +38,9 @@ plugins:
             # connection_check_threshold: 10
             dbi_params:
                 RaiseError: 1
+                ShowErrorStatement: 1
                 AutoCommit: 1
+                mysql_auto_reconnect: 1
             on_connect_do: ["SET NAMES 'utf8'", "SET CHARACTER SET 'utf8'", "SET SQL_MODE='TRADITIONAL'" ]
             log_queries: 1
          

@@ -17,7 +17,7 @@ register OpenAPI => sub {
     }
     my $app = $self->app;
     my $conf3 = $app->config;
-    my $apiconfigfile = $conf->{config};# || "doc/tal-002.yml";;
+    my $apiconfigfile = $conf->{config};
     my $obj = Dancer2::Plugin::OpenAPI::Core->new({ url => $apiconfigfile });
     my $apiconfig = $obj->get_apiconfig;
 
@@ -30,7 +30,33 @@ register OpenAPI => sub {
             }
             my $class = $app->{calling_class} || $app->{name};
             my $callback = join('::', $class, 'process_query');
-            $path =~ s/\{([^\}]+)\}/:$1/g;
+
+=pod
+
+            if ($path =~ m/\?(.*)$/) {
+                my @regexp = ();
+                my $pars = $1;
+                my @pars = split(/\&/, $pars);
+                foreach my $par (@pars) {
+                   my ($what, $val ) = split('=', $par);
+                   $what =~ m/\{(\w+)\}/;
+                   $fieldname = $1;
+                   $what =~ s/\{/(/;
+                   $what =~ s/\}/)/;
+                    push(@regexp, "$what=(?<$fieldname>\\w+)");
+                    warn Dumper { regexp => \@regexp };
+                }
+                my $newregexp = '?(('. join('|', @regexp). ')&?)*!gx';
+                    warn Dumper { newregexp => $newregexp };
+                $path =~ s/\?(.*)$/$newregexp/e;
+                    warn Dumper { path => $path };
+            }
+
+=cut
+
+            $path =~ s!/{(\w+)}!/:$1!g;
+#            $path =~ s/^/qr\£/;
+#            $path =~ s/$/\£/;
             warn "add_route(method => $http_method, regexp => $path, callback => $callback)";
             $self->app->add_route(
                         method =>  $http_method,

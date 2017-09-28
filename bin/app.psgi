@@ -3,7 +3,16 @@
 use strict;
 use warnings;
 use FindBin;
+#use Carp::Always;
 use lib "$FindBin::Bin/../lib";
 
+use Plack::Builder;
+use Plack::Middleware::CrossOrigin;
+use Dancer2::Debugger;
 use TalApi;
-TalApi->to_app;
+builder {
+    enable 'CrossOrigin', origins => '*';
+    mount "/" => TalApi->to_app;
+};
+
+#TalApi->to_app;

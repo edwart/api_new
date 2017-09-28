@@ -1,0 +1,10 @@
+<table>
+<% FOREACH path IN config.paths.keys %>
+<tr>
+    <th align="left"><% path %></th>
+<% FOREACH method IN config.paths.$path.keys %>
+    <td align="left"><% method %></td>
+<% END %>
+</tr>
+<% END %>
+</table>

@@ -1,0 +1,26 @@
+<% USE Dumper %>
+
+<!--
+<% Dumper.dump_html( timesheets  ) %>
+-->
+<form action="http://earth.beacon.co.uk/api/v4/timesheet" enctype="multipart/form-data" method="post">
+    <table>
+        <tr>
+            <th>submit details No</th>
+            <td><input type="submit" value="submit"></td>
+        </tr>
+        <% FOREACH field IN timesheets.keys.sort %>
+        <!--
+<% Dumper.dump( field ) %>
+        -->
+        <tr>
+            <th><% field %></th>
+            <% IF field == 'tp_json_entry' %>
+            <td><textarea name="tp_json_entry" rows="100" cols="200"><% timesheets.tp_json_entry %></textarea></td>
+            <% ELSE %>
+            <td><input type="text" name="<% field %>" value="<% timesheets.$field %>"/></td>
+            <% END %>
+        </tr>
+        <% END %>
+    </table>
+</form>
