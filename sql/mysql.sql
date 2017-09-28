@@ -91,6 +91,8 @@ SELECT <% IF modifiers.exists( 'fields') %>
         *
         <% END %>
 FROM bookings
+     LEFT JOIN xbookings ON bookings.oa_booking_no = xbookings.xoa_booking_no
+     LEFT JOIN slclient  ON bookings.oa_cust_code = slclient.cu_cust_code
 <%- IF  modifiers.exists( 'where') %>
 WHERE <% modifiers.where.join(" AND ") %>
 <% END -%>
