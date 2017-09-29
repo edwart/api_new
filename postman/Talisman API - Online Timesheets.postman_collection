@@ -1,0 +1,774 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Talisman API - Online Timesheets",
+		"_postman_id": "481c9a95-d33c-4d0c-af7b-618d669f8dad",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET /",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "http://earth.beacon.co.uk/api/v6",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "http://earth.beacon.co.uk/api/v6/bookings",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/1008/timesheets",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "http://earth.beacon.co.uk/api/v6/booking/1008/timesheets",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/25078004/timesheets",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "http://earth.beacon.co.uk/api/v6/booking/25078004/timesheets",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /timesheets/history?tp_week_no=21,22",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": {
+					"raw": "http://earth.beacon.co.uk/api/v6/timesheets/history?tp_week_no=21,22",
+					"protocol": "http",
+					"host": [
+						"earth",
+						"beacon",
+						"co",
+						"uk"
+					],
+					"path": [
+						"api",
+						"v6",
+						"timesheets",
+						"history"
+					],
+					"query": [
+						{
+							"key": "tp_week_no",
+							"value": "21,22",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/25078004/timesheets?weekEndDate=2017-08-18",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": {
+					"raw": "http://earth.beacon.co.uk/api/v6/booking/25078004/timesheets?tp_week_date=2017-08-18",
+					"protocol": "http",
+					"host": [
+						"earth",
+						"beacon",
+						"co",
+						"uk"
+					],
+					"path": [
+						"api",
+						"v6",
+						"booking",
+						"25078004",
+						"timesheets"
+					],
+					"query": [
+						{
+							"key": "tp_week_date",
+							"value": "2017-08-18",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/25078004/timesheets?weekEndDate=2017-08-25",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": {
+					"raw": "http://earth.beacon.co.uk/api/v6/booking/25078004/timesheets?tp_week_date=2017-08-25",
+					"protocol": "http",
+					"host": [
+						"earth",
+						"beacon",
+						"co",
+						"uk"
+					],
+					"path": [
+						"api",
+						"v6",
+						"booking",
+						"25078004",
+						"timesheets"
+					],
+					"query": [
+						{
+							"key": "tp_week_date",
+							"value": "2017-08-25",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/25078004/timesheets?weekEndDate=2017-09-01",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": {
+					"raw": "http://earth.beacon.co.uk/api/v6/booking/25078004/timesheets?tp_week_date=2017-09-01",
+					"protocol": "http",
+					"host": [
+						"earth",
+						"beacon",
+						"co",
+						"uk"
+					],
+					"path": [
+						"api",
+						"v6",
+						"booking",
+						"25078004",
+						"timesheets"
+					],
+					"query": [
+						{
+							"key": "tp_week_date",
+							"value": "2017-09-01",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/25078004/timesheets?weekEndDate=2017-09-08",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": {
+					"raw": "http://earth.beacon.co.uk/api/v6/booking/25078004/timesheets?tp_week_date=2017-09-08",
+					"protocol": "http",
+					"host": [
+						"earth",
+						"beacon",
+						"co",
+						"uk"
+					],
+					"path": [
+						"api",
+						"v6",
+						"booking",
+						"25078004",
+						"timesheets"
+					],
+					"query": [
+						{
+							"key": "tp_week_date",
+							"value": "2017-09-08",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/25078004/timesheets?weekEndDate=2017-09-15",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": {
+					"raw": "http://earth.beacon.co.uk/api/v6/booking/25078004/timesheets?tp_week_date=2017-09-15",
+					"protocol": "http",
+					"host": [
+						"earth",
+						"beacon",
+						"co",
+						"uk"
+					],
+					"path": [
+						"api",
+						"v6",
+						"booking",
+						"25078004",
+						"timesheets"
+					],
+					"query": [
+						{
+							"key": "tp_week_date",
+							"value": "2017-09-15",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/25078004/timesheets?weekEndDate=2017-09-22",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": {
+					"raw": "http://earth.beacon.co.uk/api/v6/booking/25078004/timesheets?tp_week_date=2017-09-22",
+					"protocol": "http",
+					"host": [
+						"earth",
+						"beacon",
+						"co",
+						"uk"
+					],
+					"path": [
+						"api",
+						"v6",
+						"booking",
+						"25078004",
+						"timesheets"
+					],
+					"query": [
+						{
+							"key": "tp_week_date",
+							"value": "2017-09-22",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /bookings/25078004/timesheets?weekEndDate=2017-09-29",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": {
+					"raw": "http://earth.beacon.co.uk/api/v6/booking/25078004/timesheets?tp_week_date=2017-09-29",
+					"protocol": "http",
+					"host": [
+						"earth",
+						"beacon",
+						"co",
+						"uk"
+					],
+					"path": [
+						"api",
+						"v6",
+						"booking",
+						"25078004",
+						"timesheets"
+					],
+					"query": [
+						{
+							"key": "tp_week_date",
+							"value": "2017-09-29",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic dGFsOnRlc3Q=",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /timesheets/pending",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "http://earth.beacon.co.uk/api/v6/timesheets/pending",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /timesheets/history",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "http://earth.beacon.co.uk/api/v6/timesheets/history",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		},
+		{
+			"name": "GET /timesheet/25078004",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Body contains headers\"] = responseBody.has(\"headers\");",
+							"tests[\"Body contains args\"] = responseBody.has(\"args\");",
+							"tests[\"Body contains url\"] = responseBody.has(\"url\");",
+							"",
+							"var responseJSON;",
+							"",
+							"try { responseJSON = JSON.parse(responseBody); }",
+							"catch (e) { }",
+							"",
+							"",
+							"tests[\"Args key contains argument passed as url parameter\"] = 'test' in responseJSON.args"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "http://earth.beacon.co.uk/api/v6/timesheet/25078004",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": "The HTTP `GET` request method is meant to retrieve data from a server. The data\nis identified by a unique URI (Uniform Resource Identifier). \n\nA `GET` request can pass parameters to the server using \"Query String \nParameters\". For example, in the following request,\n\n> http://example.com/hi/there?hand=wave\n\nThe parameter \"hand\" has the value \"wave\".\n\nThis endpoint echoes the HTTP headers, request parameters and the complete\nURI requested."
+			},
+			"response": []
+		}
+	]
+}
