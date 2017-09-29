@@ -9,12 +9,12 @@ appname: "TalApi"
 # views/layouts/main.tt)
 layout: "main"
 
-logger: log4perl
+#logger: log4perl
 log: core
-engines:
-   logger:
-     log4perl:
-        config_file: log4perl.conf
+#engines:
+#   logger:
+#     log4perl:
+#        config_file: log4perl.conf
 
 # when the charset is set to UTF-8 Dancer2 will handle for you
 # all the magic of encoding and decoding. You should not care
@@ -25,15 +25,15 @@ charset: "UTF-8"
 # simple: default and very basic template engine
 # template_toolkit: TT
 
-template: "simple"
+#template: "simple"
 
-# template: "template_toolkit"
-# engines:
-#   template:
-#     template_toolkit:
-#       ENCODING: utf8
-#       start_tag: '<%'
-#       end_tag:   '%>'
+template: "template_toolkit"
+engines:
+  template:
+    template_toolkit:
+      ENCODING: utf8
+      start_tag: '<%'
+      end_tag:   '%>'
 
 # session engine
 #

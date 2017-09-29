@@ -18,6 +18,7 @@ requires "App::Ack" => "0";
 requires "HTTP::Tiny" => "0";
 requires "SQL::Beautify" => "0";
 requires "Plack::Middleware::CrossOrigin" => "0";
+requires "DateTime::Event::Recurrence" => "0";
 
 recommends "YAML"             => "0";
 recommends "URL::Encode::XS"  => "0";

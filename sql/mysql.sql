@@ -2,8 +2,8 @@
 SELECT `cu_cust_code`,
        `cu_name`
 FROM slcust
-WHERE `cu_cust_code` 
-order by `cu_cust_code` desc 
+WHERE `cu_cust_code`
+order by `cu_cust_code` desc
 
 [get_customer]
 SELECT *
@@ -26,7 +26,7 @@ update job
 set <% FOREACH field IN fields %>set <% field %> = <% fields.field %><% UNLESS count.last %>,<% END %>i
 <% END %>
 WHERE jb_job_no = <% jobNo %>
- 
+
 [GetRateCodes]
 select rc_payrate_no,
        rc_pay_type,
@@ -58,10 +58,10 @@ SELECT oa_booking_no,
         oa_payrate_no__8
 FROM bookings
 WHERE oa_cand_no = <% candNo %>
-AND 
+AND
 
 [GetBookingDetails]
-select bookings.*,  
+select bookings.*,
        timesheet.*
 from bookings,
     timepool
@@ -86,15 +86,16 @@ ORDER BY <% modifiers.sort.keys.join(',') %>
 
 [GetBookings]
 SELECT <% IF modifiers.exists( 'fields') %>
-        <% modifiers.fields %>
+        <% modifiers.fields.join(',') %>
         <% ELSE %>
         *
         <% END %>
 FROM bookings
      LEFT JOIN xbookings ON bookings.oa_booking_no = xbookings.xoa_booking_no
      LEFT JOIN slclient  ON bookings.oa_cust_code = slclient.cu_cust_code
+WHERE bookings.oa_cand_no = <% params.candId %>
 <%- IF  modifiers.exists( 'where') %>
-WHERE <% modifiers.where.join(" AND ") %>
+AND <% modifiers.where.join(" AND ") %>
 <% END -%>
 <%- IF modifiers.exists( 'orderby' ) -%>
 ORDER BY <% modifiers.orderby.join(',') %>
@@ -111,6 +112,9 @@ WHERE tp_booking_no = <% params.bookingNo %>
 <%- IF  modifiers.exists( 'search') %>
 <% modifiers.search.keys.join(" AND ") %>
 <% END -%>
+<%- IF  modifiers.exists( 'where') %>
+AND <% modifiers.where.join(" AND ") %>
+<% END -%>
 <%- IF modifiers.exists( 'sort' ) -%>
 ORDER BY <% modifiers.sort.keys.join(',') %>
 <% END %>
@@ -124,6 +128,9 @@ SELECT <%- IF modifiers.exists( 'fields') -%>
 FROM timepool
 WHERE tp_booking_no = <% params.bookingNo %>
 AND tp_week_date = <% params.weekEndDate %>
+
+[GetBlankTimesheet]
+TODO
 
 [NewTimesheet]
 /*
@@ -157,7 +164,9 @@ INSERT INTO timepool (
                       tp_type_V,
                       tp_week_no,
                       tp_week_no_V,
-                      tp_xfer_date)
+                      tp_xfer_date,
+                      tp_extranet_status
+                      )
 VALUES
 (
                       <% params.tp_amend_by %>,
@@ -186,5 +195,51 @@ VALUES
                       <% params.tp_type_V %>,
                       <% params.tp_week_no %>,
                       <% params.tp_week_no_V %>,
-                      <% params.tp_xfer_date %>)
+                      <% darams.tp_xfer_date %>,
+                      <% params.tp_extranet_status %>,
+                      )
 
+[HIDENGetPendingTimesheets]
+SELECT oa_booking_no,
+       oa_cand_no
+       oa_assignment,
+       oa_extranet
+FROM bookings
+LEFT JOIN xbookings ON bookings.oa_booking_no = xbookings.xoa_booking_no
+WHERE oa_status = "Live"
+AND oa_extranet IN('p','y')
+AND oa_date_start <= CURDATE()
+AND (oa_date_end = NULL or oa_date_end >= CURDATE())
+
+[GetBlankTimesheets]
+SELECT tp_timesheet_no, tp_week_date
+FROM timepool, bookings
+WHERE timepool.tp_booking_no = bookings.oa_booking_no
+AND bookings.oa_cand_no = <% params.candId %>
+AND timepool.tp_extranet_status = ''
+<%- IF  modifiers.exists( 'search') %>
+<% modifiers.search.keys.join(" AND ") %>
+<% END -%>
+
+
+[GetTimesheetHistory]
+SELECT <%- IF modifiers.exists( 'fields') -%>
+        <%- modifiers.fields.keys.join(',') -%>
+        <%- ELSE -%>
+        timepool.*, slclient.cu_name
+        <%- END %>
+FROM timepool, bookings
+     LEFT JOIN xbookings ON bookings.oa_booking_no = xbookings.xoa_booking_no
+     LEFT JOIN slclient  ON bookings.oa_cust_code = slclient.cu_cust_code
+WHERE timepool.tp_booking_no = bookings.oa_booking_no
+AND bookings.oa_cand_no = <% params.candId %>
+and timepool.tp_extranet_status in ('Paid', 'Approved', 'Entered')
+<%- IF  modifiers.exists( 'search') %>
+<% modifiers.search.keys.join(" AND ") %>
+<% END -%>
+<%- IF  modifiers.exists( 'where') %>
+AND <% modifiers.where.join(" AND ") %>
+<% END -%>
+<%- IF modifiers.exists( 'sort' ) -%>
+ORDER BY <% modifiers.sort.keys.join(',') %>
+<% END %>

@@ -21,6 +21,7 @@ my %default_responses = ( 200 => { description => "success" },
                           );
 
 our $api;
+our $default_responses;
 do 'config/api.pl' or die "can't do config/api.pl: $!";
 
 p $api;
@@ -84,17 +85,17 @@ foreach my $path (keys %{ $api->{paths} }) {
         my $responses = process_responses($cfg->{responses}, \%tables);
     }
 }
-p %tables;
+#  p %tables;
 get_column_info(\%tables, $config);
 my $json_obj = JSON::DWIW->new({ pretty => 1, bare_solidus => 1, convert_bool => 1});
-p  $config;
+#  p  $config;
 my $json = $json_obj->to_json( $config ) or die "JSON error: " . JSON::DWIW->get_error_string;
 
-p $json;
+#  p $json;
 $json =~ s!"(true|false)"!$1!g;
 my $val = JSON::Validator::OpenAPI->new;
 my ($fh, $filename) = tempfile( SUFFIX => '.json');
-p $filename;
+  p $filename;
 $fh->print($json);
 $fh->close;
 my $spec = $val->load_and_validate_schema($filename);
@@ -126,7 +127,7 @@ sub get_column_info {
 #                        required => 'true',
                         );
             unless (exists($conversion{ $row->{data_type} })) {
-                warn "ERROR: datatype $row->{data_type} not in conversion table";
+#                warn "ERROR: datatype $row->{data_type} not in conversion table";
                 $cfg{ type } = $row->{data_type};
             }
             else {
@@ -152,11 +153,11 @@ sub process_parameters {
 
         }
     }
-    p @params;
+#    p @params;
     return \@params;
 }
 sub process_responses {
     my ($params, $tables) = @_;
-    my @responses = ();
-    return \@responses;
+    my $responses = $default_responses;
+    return $responses;
 }

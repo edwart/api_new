@@ -8,12 +8,15 @@ use Dancer2::Plugin::Database;
 use Data::Dumper;
 use YAML::XS 'LoadFile';
 use Path::Tiny;
+use DateTime;
+use DateTime::Event::Recurrence;
 use FindBin qw/ $Bin /;
 use File::Basename qw/ dirname /;
 use SQL::Library;
 use SQL::Beautify;
 use Template;
-#set serializer => 'JSON';
+
+set serializer => 'Mutable';
 
 my $sql_beautifier = SQL::Beautify->new;
 my $config              = config;
@@ -34,7 +37,7 @@ get '/createtimesheet/:filename' => sub {
     my %query_parameters = query_parameters->flatten;
     debug to_dumper {query_parameters => \%query_parameters, params => \%params };
     debug 'In createtimesheet get';
-    
+
     my $fromfile = path(route_parameters->get('filename'))->slurp;
     debug to_dumper {fromfile => $fromfile };
     my $data = from_json($fromfile);
@@ -65,13 +68,89 @@ post '/createtimesheet' => sub {
                         body_params => \%body_parameters,
                         query_modifiers=> \%query_modifiers,
                         );
-                     
-    
+
+
 };
 =cut
 sub GetApiVersionInfo {
     debug to_dumper $apiconfig;
     return to_json $apiconfig->{info};
+}
+sub GetPendingTimesheets {
+    my @passed = @_;
+    debug "In GetPendingTimesheets";
+    my %query_parameters = query_parameters->flatten;
+    my %route_parameters = route_parameters->flatten;
+    my %body_parameters = body_parameters->flatten;
+    my $sql;
+    my $query_modifiers;
+    ($sql, $query_modifiers) = __get_query_sql('GetBookings');
+    $query_modifiers->{limit} = -1;
+    $query_modifiers->{fields} = [ qw/oa_booking_no oa_date_start oa_date_end/ ];
+    my $bookings = __run_query( query => 'GetBookings',
+                                      sql => $sql,
+                                      query_params => \%query_parameters,
+                                      route_params => \%route_parameters,
+                                      body_params => \%body_parameters,
+                                      query_modifiers=> $query_modifiers,
+                                    );
+    debug to_dumper { bookings => $bookings };
+    my %result = (
+                    data => [],
+                    status => 0,
+                    );
+    foreach my $booking (@{ $bookings->{data} } ) {
+        debug to_dumper { booking => $booking };
+        debug "Calling process_query GetBlankTimesheets";
+        ($sql, $query_modifiers) = __get_query_sql('GetBlankTimesheets'),
+        $query_modifiers->{limit} = -1;
+        $query_modifiers->{search} = 'oa_booking_no='.$booking->{oa_booking_no};
+        my $blank_timesheets = __run_query( query => 'GetBlankTimesheets',
+                                        sql => $sql,
+                                        query_params => \%query_parameters,
+                                        route_params => \%route_parameters,
+                                        body_params => \%body_parameters,
+                                        query_modifiers=> $query_modifiers,
+                                        );
+        ($sql, $query_modifiers) = __get_query_sql( 'GetTimesheetHistory'),
+        $query_modifiers->{limit} = -1;
+        $query_modifiers->{search} = 'oa_booking_no='.$booking->{oa_booking_no};
+        # TODO add timepool.tp_week_date >= 05-04-2017
+        my $existing_timesheets = __run_query( query => 'GetTimesheetHistory',
+                                                sql => $sql,
+                                                query_params => \%query_parameters,
+                                                route_params => \%route_parameters,
+                                                body_params => \%body_parameters,
+                                                query_modifiers=> $query_modifiers,
+                                                );
+
+        my %timesheets = map { $_ => undef } @{ __get_fridays($booking->{oa_date_start}) };
+        foreach my $ts (@{ $existing_timesheets->{data} }) {
+            $timesheets{ $ts->{tp_week_date} } = $ts->{tp_extranet_status};
+        }
+        foreach my $ts (@{ $blank_timesheets->{data} }) {
+            $timesheets{ $ts->{tp_week_date} } = $ts->{tp_extranet_status};
+        }
+
+        foreach my $friday (sort keys %timesheets ) {
+            push(@{ $result{data}}, {
+                    oa_booking_no => $booking->{oa_booking_no},
+                    oa_week_date => $friday,
+                    cu_name => $booking->{cu_name},
+                    tp_extranet_status => $timesheets{$friday},
+                },
+                ) unless $timesheets{$friday} =~ /^(Approved|Paid)$/;
+        }
+    }
+    $result{pagination} = { total => scalar(@{ $result{data} }),
+                              currentPage => 1,
+                              hasMoreItems => 0,
+                              pages => 1,
+                              perPage => scalar(@{ $result{data} }),
+                              };
+    debug to_dumper \%result;
+    return  to_json \%result;
+
 }
 sub GetBookingTimesheets {
     my @passed = @_;
@@ -79,8 +158,7 @@ sub GetBookingTimesheets {
     my %route_parameters = route_parameters->flatten;
     my %body_parameters = body_parameters->flatten;
     my %query_modifiers = ();
-    $query_parameters{candId} ||= 10240;
-    my $ratecodes = __run_query( query => 'GetBookingRateCodes',
+    my $ratecodes = process_query( query => 'GetBookingRateCodes',
                         query_params => \%query_parameters,
                         route_params => \%route_parameters,
                         body_params => \%body_parameters,
@@ -101,36 +179,21 @@ sub NewTimesheet {
                      body_parameters => \%body_parameters,
                      };
     return '{
-                "OK": "It wiorked !"
+                "OK": "It worked !"
             }';
 
 }
-sub process_query {
-    my @passed = @_;
-
+sub __get_query_sql {
+    my ($query) = @_;
+    my $sql = undef;
+    my $sql_source = $sql_sources->{ $query } || $sql_sources->{ default };
+    my $dbh = $database_handles->{ $sql_source };
+    my $preprocessed = $queries->{ $sql_source }->{ $query };
     my %query_parameters = query_parameters->flatten;
     my %route_parameters = route_parameters->flatten;
     my %body_parameters = body_parameters->flatten;
-    my $query = $passed[0]{ operationId };
-    my $sql_source = $sql_sources->{ $query } || $sql_sources->{ default };
-    my $dbh = $database_handles->{ $sql_source };
-
-    unless (exists( $queries->{ $sql_source }->{ $query })) {
-        if (exists( $methods->{$query} )) {
-            my $sub = TalApi->can( $query );
-
-            return &$sub(@_);
-        }
-        else {
-            return '{
-                        "error": "unknown query $query"
-                    }';
-        }
-    }
-    my $sql = undef;
-    my $preprocessed = $queries->{ $sql_source }->{ $query };
     debug to_dumper {preprocessed => $preprocessed, query_parameters => \%query_parameters,body_parameters=> \%body_parameters,route_parameters => \%route_parameters   };
-    my %query_modifiers = ( ); 
+    my %query_modifiers = ( );
 
     while (my ($par, $val) = each %query_parameters) {
           debug to_dumper { par => $par,
@@ -157,33 +220,96 @@ sub process_query {
             }
         }
     }
+    debug to_dumper { query_modifiers=> \%query_modifiers };
+    my $quoted_pars = __quote_params({ %route_parameters, %query_parameters, %body_parameters });
+    $quoted_pars->{candId} ||= 200285;
+    debug to_dumper { params=> $quoted_pars, modifiers => \%query_modifiers  };
+    $tt->process(\$preprocessed, { params => $quoted_pars,
+                                   modifiers => \%query_modifiers}, \$sql) or die $tt->error;
+    $sql =~ s/\s*$//;
+    my $beautified = $sql_beautifier->query($sql);
+    debug to_dumper {postprocessed => $sql, beautified => $beautified };
+
+    my $nice_sql = $sql_beautifier->beautify;
+    return ($sql, \%query_modifiers);
+}
+sub process_query {
+    my @passed = @_;
+
+    my %query_parameters = query_parameters->flatten;
+    my %route_parameters = route_parameters->flatten;
+    my %body_parameters = body_parameters->flatten;
+    my %query_modifiers = ();
+    my $query = $passed[0]{ operationId };
+    my $sql_source = $sql_sources->{ $query } || $sql_sources->{ default };
+    my $dbh = $database_handles->{ $sql_source };
+
+    unless (exists( $queries->{ $sql_source }->{ $query })) {
+        if (exists( $methods->{$query} )) {
+            my $sub = TalApi->can( $query );
+
+            return &$sub(@_);
+        }
+        else {
+            return '{
+                        "error": "unknown query $query"
+                    }';
+        }
+    }
+    my ($sql, $query_modifiers ) = __get_query_sql($query);
+
 =pod
+    my $sql = undef;
+    my $preprocessed = $queries->{ $sql_source }->{ $query };
+    debug to_dumper {preprocessed => $preprocessed, query_parameters => \%query_parameters,body_parameters=> \%body_parameters,route_parameters => \%route_parameters   };
+    my %query_modifiers = ( );
 
-    if ($query_modifiers{page} and !$query_modifiers{limit} )  {
-        return '{
-                    "error": "you must supply a limit if you suppply a page"
-                }';
-    }   
+    while (my ($par, $val) = each %query_parameters) {
+          debug to_dumper { par => $par,
+                            val => $val };
+          if  ($par =~ m/^sort(\w+)/) {
+            my $field = $1;
+            my $direction = $val eq '1' ? 'ASC' : 'DESC';
+            $query_modifiers{orderby} ||= [];
+            push(@{ $query_modifiers{orderby} }, "$field $direction");
+        } elsif ($par eq 'select') {
+            my @fields = split(',', $val);
+            $query_modifiers{fields} = \@fields;
+        } elsif ($par =~ m/^(limit|page)/) {
+            $query_modifiers{$par} =  $val;
 
-=cut
-        
+        } else {
+            $query_modifiers{where} ||= [];
+            if ($val =~ m/,/) {
+                my @values = map {$dbh->quote($_) } split(',', $val);
+                push(@{ $query_modifiers{where} }, qq!$par IN !.'('. join(',', @values). ')');
+            }
+            else {
+                push(@{ $query_modifiers{where} }, qq!$par = !.$dbh->quote($val));
+            }
+        }
+    }
 
     debug to_dumper { query_modifiers=> \%query_modifiers };
     my $quoted_pars = __quote_params({ %route_parameters, %query_parameters, %body_parameters });
-    debug to_dumper { params=> $quoted_pars  };
+    $quoted_pars->{candId} ||= 200285;
+    $quoted_pars->{fridays} ||= $fridays;
+    debug to_dumper { params=> $quoted_pars, modifiers => \%query_modifiers  };
     $tt->process(\$preprocessed, { params => $quoted_pars,
                                    modifiers => \%query_modifiers}, \$sql) or die $tt->error;
     $sql =~ s/\s*$//;
     debug to_dumper {postprocessed => $sql };
     my $beautified = $sql_beautifier->query($sql);
+
     my $nice_sql = $sql_beautifier->beautify;
 
-    debug to_dumper { nice_sql =>$nice_sql, preprocessed => $preprocessed, params => \%query_parameters, modifiers => \%query_modifiers, sql => $sql, passed => \@passed, query => $query };
-    
+=cut
+
+    debug to_dumper { params => \%query_parameters, modifiers => \%query_modifiers, sql => $sql, query => $query };
+
 
     return to_json __run_query( query => $query,
                         sql => $sql,
-                        nice_sql => $nice_sql,
                         query_params => \%query_parameters,
                         route_params => \%route_parameters,
                         body_params => \%body_parameters,
@@ -245,6 +371,7 @@ sub __get_sql_sources {
 
 sub __run_query {
     my %params = @_;
+    debug to_dumper { __run_query => \%params };
     my $calc_rows_sql = $params{sql};
     $calc_rows_sql =~ s/select\s+/select SQL_CALC_FOUND_ROWS /mi;
     debug to_dumper { sql => $params{sql},
@@ -252,14 +379,17 @@ sub __run_query {
     my $sth1 = $database_handles->{ mysql }->prepare($calc_rows_sql) or warn $DBI::errstr;
     $sth1->execute() or debug "execute failed";
     my $row_count = $database_handles->{ mysql }->selectrow_array('SELECT FOUND_ROWS()');
-    
+
     my $limit = $params{query_modifiers}{limit} || 5;
     my $page = $params{query_modifiers}{page} || 1;
-    my $limit_offset = ($page * $limit) - $limit + 1;
-    my $last_row = $limit_offset + $limit;
+    my $last_row =$row_count;
+    unless ( $limit == -1 ) {
+        my $limit_offset = ($page * $limit) - $limit;
+        $last_row = $limit_offset + $limit;
 
-    my $limit_clause = " LIMIT $limit_offset, $limit";
-    $params{sql} .= " $limit_clause";
+        my $limit_clause = " LIMIT $limit_offset, $limit";
+        $params{sql} .= " $limit_clause";
+    }
     debug to_dumper { sql => $params{sql} };
     my $sth = $database_handles->{ mysql }->prepare($params{sql} );
     my $ret = $sth->execute() or debug "execute failed";
@@ -267,7 +397,7 @@ sub __run_query {
                       rows => $row_count,
                       calc_rows_sql => $calc_rows_sql };
 
-    my %result = (  
+    my %result = (
                     debug => { sql => $params{sql} },
                     pagination => { total => $row_count },
                     status => defined $ret ? 0 : $sth->errstr,
@@ -290,4 +420,16 @@ sub __run_query {
     }
     return \%result;
 }
+sub __get_fridays {
+    my ($from_date) = @_;
+    my ($year, $month, $day) = split('-',$from_date);
+
+    my $dt_start = DateTime->new(year => $year, month => $month, day => $day);
+    my $dt_end = DateTime->today();
+    my $der = DateTime::Event::Recurrence->weekly(days => 5);
+    my @dates = ();
+    push(@dates, $_->ymd('-')) for $der->as_list( start => $dt_start, end => $dt_end );
+    return \@dates;
+}
+
 true;
