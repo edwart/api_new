@@ -16,6 +16,9 @@ use SQL::Library;
 use SQL::Beautify;
 use Template;
 
+# set logger => 'null' if $ENV{HARNESS_ACTIVE} && ! $ENV{TEST_VERBOSE};
+set log => 'error' if $ENV{HARNESS_ACTIVE} && ! $ENV{TEST_VERBOSE};
+
 set serializer => 'Mutable';
 
 my $sql_beautifier = SQL::Beautify->new;
@@ -78,6 +81,7 @@ sub GetApiVersionInfo {
 }
 sub GetPendingTimesheets {
     my @passed = @_;
+$DB::single = 1;
     debug "In GetPendingTimesheets";
     my %query_parameters = query_parameters->flatten;
     my %route_parameters = route_parameters->flatten;
@@ -197,10 +201,14 @@ sub __get_query_sql {
     debug to_dumper {preprocessed => $preprocessed, query_parameters => \%query_parameters,body_parameters=> \%body_parameters,route_parameters => \%route_parameters   };
     my %query_modifiers = ( );
 
-    while (my ($par, $val) = each %query_parameters) {
-          debug to_dumper { par => $par,
-                            val => $val };
-          if  ($par =~ m/^sort(\w+)/) {
+    # each() handles multiple values for same key
+    query_parameters->each( sub {
+        my $par = $_[0];
+        my $val = $_[1];
+        debug to_dumper { par => $par,
+                        val => $val };
+
+        if  ($par =~ m/^sort(\w+)/) {
             my $field = $1;
             my $direction = $val eq '1' ? 'ASC' : 'DESC';
             $query_modifiers{orderby} ||= [];
@@ -217,15 +225,27 @@ sub __get_query_sql {
                 my @values = map {$dbh->quote($_) } split(',', $val);
                 push(@{ $query_modifiers{where} }, qq!$par IN !.'('. join(',', @values). ')');
             }
-            # elsif ($val =~ m/_/) { # date range e.g. tp_week_date=2017-04-07_2017-09-29
-            #     my @values = map {$dbh->quote($_) } split('_', $val);
-            #     push(@{ $query_modifiers{where} }, qq!$par BETWEEN !.
-            # }
+            elsif ($val =~ m/^>=/) { # tp_week_date=>=2017-09-21 ->  tp_week_date >= 2017-09-21
+                $val = substr $val, 2;
+                push(@{ $query_modifiers{where} }, qq!$par >= !.$dbh->quote($val));
+            }
+            elsif ($val =~ m/^>/) {  # tp_week_date=>2017-09-21  ->  tp_week_date > 2017-09-21
+                $val = substr $val, 1;
+                push(@{ $query_modifiers{where} }, qq!$par > !.$dbh->quote($val));
+            }
+            elsif ($val =~ m/^<=/) { # tp_week_date=<=2017-09-21 ->  tp_week_date <= 2017-09-21
+                $val = substr $val, 2;
+                push(@{ $query_modifiers{where} }, qq!$par <= !.$dbh->quote($val));
+            }
+            elsif ($val =~ m/</) {   # tp_week_date=<2017-09-21  ->  tp_week_date < 2017-09-21
+                $val = substr $val, 1;
+                push(@{ $query_modifiers{where} }, qq!$par < !.$dbh->quote($val));
+            }
             else {
                 push(@{ $query_modifiers{where} }, qq!$par = !.$dbh->quote($val));
             }
         }
-    }
+    } );
     debug to_dumper { query_modifiers=> \%query_modifiers };
     my $quoted_pars = __quote_params({ %route_parameters, %query_parameters, %body_parameters });
     $quoted_pars->{candId} ||= 200285;
