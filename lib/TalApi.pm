@@ -124,7 +124,7 @@ sub GetPendingTimesheets {
                                                 query_modifiers=> $query_modifiers,
                                                 );
 
-        my %timesheets = map { $_ => undef } @{ __get_fridays($booking->{oa_date_start}) };
+        my %timesheets = map { $_ => undef } @{ __get_fridays($booking->{oa_date_start}) }; # TODO from 05-04-ccyy
         foreach my $ts (@{ $existing_timesheets->{data} }) {
             $timesheets{ $ts->{tp_week_date} } = $ts->{tp_extranet_status};
         }
@@ -133,13 +133,15 @@ sub GetPendingTimesheets {
         }
 
         foreach my $friday (sort keys %timesheets ) {
+            my $status = $timesheets{$friday} // '';
             push(@{ $result{data}}, {
                     oa_booking_no => $booking->{oa_booking_no},
-                    oa_week_date => $friday,
+                    oa_assignment => $booking->{oa_assignment},
                     cu_name => $booking->{cu_name},
-                    tp_extranet_status => $timesheets{$friday},
+                    tp_week_date => $friday,
+                    tp_extranet_status =>$timesheets{$friday},
                 },
-                ) unless $timesheets{$friday} =~ /^(Approved|Paid)$/;
+                ) unless $status =~ /^(Approved|Paid)$/;
         }
     }
     $result{pagination} = { total => scalar(@{ $result{data} }),
@@ -215,6 +217,10 @@ sub __get_query_sql {
                 my @values = map {$dbh->quote($_) } split(',', $val);
                 push(@{ $query_modifiers{where} }, qq!$par IN !.'('. join(',', @values). ')');
             }
+            # elsif ($val =~ m/_/) { # date range e.g. tp_week_date=2017-04-07_2017-09-29
+            #     my @values = map {$dbh->quote($_) } split('_', $val);
+            #     push(@{ $query_modifiers{where} }, qq!$par BETWEEN !.
+            # }
             else {
                 push(@{ $query_modifiers{where} }, qq!$par = !.$dbh->quote($val));
             }
@@ -430,6 +436,24 @@ sub __get_fridays {
     my @dates = ();
     push(@dates, $_->ymd('-')) for $der->as_list( start => $dt_start, end => $dt_end );
     return \@dates;
+}
+
+# go back to 5th April, start day of this financial year
+sub __financial_year_start_friday {
+    my $dt = DateTime->today;
+    # if before april 5th, then this is in previous year
+    if ( $dt->month < 4 || ( $dt->month == 4 && $dt->day < 5 ) )
+    {
+        $dt->add( years => -1 );
+    }
+    $dt->set_month( 4 );
+    $dt->set_day( 5 );
+    # move forward to Friday
+    while ( $dt->day_of_week != 5 )
+    {
+        $dt->add( days => 1 );
+    }
+    return $dt;
 }
 
 true;

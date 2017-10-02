@@ -226,7 +226,7 @@ AND timepool.tp_extranet_status = ''
 SELECT <%- IF modifiers.exists( 'fields') -%>
         <%- modifiers.fields.keys.join(',') -%>
         <%- ELSE -%>
-        timepool.*, slclient.cu_name
+        bookings.oa_booking_no, bookings.oa_assignment, slclient.cu_name, tp_timesheet_no, tp_extranet_status, tp_week_date, tp_week_no, tp_json_entry
         <%- END %>
 FROM timepool, bookings
      LEFT JOIN xbookings ON bookings.oa_booking_no = xbookings.xoa_booking_no
