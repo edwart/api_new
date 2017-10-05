@@ -61,14 +61,11 @@ WHERE oa_cand_no = <% candNo %>
 AND
 
 [GetBookingDetails]
-select bookings.*,
-       timesheet.*
-from bookings,
-    timepool
-where th_timesheet_no = oa_timesheet_no
-and oa_booking_no = <% bookingNo %>
-and th_paywkend = <% weekEndDate %>
-AND oa_cand_no = <% candNo %>
+select bookings.*
+from bookings
+     LEFT JOIN xbookings ON bookings.oa_booking_no = xbookings.xoa_booking_no
+     LEFT JOIN slclient  ON bookings.oa_cust_code = slclient.cu_cust_code
+WHERE oa_booking_no = <% params.bookingNo %>
 
 [listcandidates]
 SELECT <% IF modifiers.exists( 'fields') %>
@@ -80,8 +77,8 @@ FROM cands
 <%- IF  modifiers.exists( 'search') %>
 WHERE <% modifiers.search.keys.join(" AND ") %>
 <% END -%>
-<%- IF modifiers.exists( 'sort' ) -%>
-ORDER BY <% modifiers.sort.keys.join(',') %>
+<%- IF modifiers.exists( 'orderby' ) -%>
+ORDER BY <% modifiers.orderby.keys.join(',') %>
 <% END %>
 
 [GetBookings]
@@ -115,9 +112,19 @@ WHERE tp_booking_no = <% params.bookingNo %>
 <%- IF  modifiers.exists( 'where') %>
 AND <% modifiers.where.join(" AND ") %>
 <% END -%>
-<%- IF modifiers.exists( 'sort' ) -%>
-ORDER BY <% modifiers.sort.keys.join(',') %>
+<%- IF modifiers.exists( 'orderby' ) -%>
+ORDER BY <% modifiers.orderby.keys.join(',') %>
 <% END %>
+
+[GetTimesheetById]
+SELECT <%- IF modifiers.exists( 'fields') -%>
+        <%- modifiers.fields.keys.join(',') -%>
+        <%- ELSE -%>
+        *
+        <%- END %>
+FROM timepool
+WHERE tp_timesheet_no = <% params.timesheetNo %>
+AND tp_week_date = <% params.weekEndDate %>
 
 [GetTimesheet]
 SELECT <%- IF modifiers.exists( 'fields') -%>
@@ -133,71 +140,15 @@ AND tp_week_date = <% params.weekEndDate %>
 TODO
 
 [NewTimesheet]
-/*
-<% USE Dumper %>
-params <% Dumper.dump( params ) %>
-*/
 INSERT INTO timepool (
-                      tp_amend_by,
-                      tp_batch_no,
-                      tp_booking_no,
-                      tp_booking_no_V,
-                      tp_branch,
-                      tp_client_code,
-                      tp_client_code_V,
-                      tp_cost_centre,
-                      tp_custref,
-                      tp_error,
-                      tp_hours_tot_V,
-                      tp_imago_id,
-                      tp_json_accept,
-                      tp_json_entry,
-                      tp_not_working,
-                      tp_payroll_no_V,
-                      tp_process_level,
-                      tp_recvd_date,
-                      tp_serial_code,
-                      tp_source,
-                      tp_surname,
-                      tp_surname_V,
-                      tp_type,
-                      tp_type_V,
-                      tp_week_no,
-                      tp_week_no_V,
-                      tp_xfer_date,
-                      tp_extranet_status
-                      )
+<% params.keys.sort.join(",\n") %>
+)
 VALUES
 (
-                      <% params.tp_amend_by %>,
-                      <% params.tp_batch_no %>,
-                      <% params.tp_booking_no %>,
-                      <% params.tp_booking_no_V %>,
-                      <% params.tp_branch %>,
-                      <% params.tp_client_code %>,
-                      <% params.tp_client_code_V %>,
-                      <% params.tp_cost_centre %>,
-                      <% params.tp_custref %>,
-                      <% params.tp_error %>,
-                      <% params.tp_hours_tot_V %>,
-                      <% params.tp_imago_id %>,
-                      <% params.tp_json_accept %>,
-                      <% params.tp_json_entry %>,
-                      <% params.tp_not_working %>,
-                      <% params.tp_payroll_no_V %>,
-                      <% params.tp_process_level %>,
-                      <% params.tp_recvd_date %>,
-                      <% params.tp_serial_code %>,
-                      <% params.tp_source %>,
-                      <% params.tp_surname %>,
-                      <% params.tp_surname_V %>,
-                      <% params.tp_type %>,
-                      <% params.tp_type_V %>,
-                      <% params.tp_week_no %>,
-                      <% params.tp_week_no_V %>,
-                      <% darams.tp_xfer_date %>,
-                      <% params.tp_extranet_status %>,
-                      )
+<% FOREACH param IN params.keys.sort -%>
+    <% params.$param %><% UNLESS loop.last %>,<% END %>
+<% END -%>
+)
 
 [HIDENGetPendingTimesheets]
 SELECT oa_booking_no,
@@ -240,6 +191,6 @@ and timepool.tp_extranet_status in ('Paid', 'Approved', 'Entered')
 <%- IF  modifiers.exists( 'where') %>
 AND <% modifiers.where.join(" AND ") %>
 <% END -%>
-<%- IF modifiers.exists( 'sort' ) -%>
-ORDER BY <% modifiers.sort.keys.join(',') %>
+<%- IF modifiers.exists( 'orderby' ) %>
+ORDER BY <% modifiers.orderby.keys.join(',') %>
 <% END %>

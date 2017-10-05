@@ -32,6 +32,7 @@ my $tt = new Template(START_TAG => '<%', END_TAG => '%>');
 our $VERSION = '0.1';
 
 get '/interface' => sub {
+
     template 'interface.tt', { config => $apiconfig };
 };
 get '/createtimesheet/:filename' => sub {
@@ -48,6 +49,8 @@ get '/createtimesheet/:filename' => sub {
     my $json = to_json($jsondata);
     $data->{tp_json_entry} = qq!$json!;
     debug to_dumper { timesheets => $data };
+
+    set serializer => undef;
 
     template 'timesheet.tt', { timesheets => $data };
 };
@@ -76,19 +79,239 @@ post '/createtimesheet' => sub {
 };
 =cut
 sub GetApiVersionInfo {
-    debug to_dumper $apiconfig;
+#    debug to_dumper $apiconfig;
     return to_json $apiconfig->{info};
+}
+sub GetTimesheet_sub {
+    my @passed = @_;
+    debug "In GetTimesheet_sub";
+    my %query_parameters = query_parameters->flatten;
+    my %route_parameters = route_parameters->flatten;
+    my %body_parameters = body_parameters->flatten;
+    my $sql;
+#    debug to_dumper { route_parameters => \%route_parameters, query_parameters => \%query_parameters};
+    my $query_modifiers;
+    if (exists($query_parameters{timesheetNo})) {
+	    ($sql, $query_modifiers) = __get_query_sql('GetTimesheetById');
+		return __run_query( query => 'GetTimesheetById',
+                                      sql => $sql,
+                                      query_params => \%query_parameters,
+                                      route_params => \%route_parameters,
+                                      body_params => \%body_parameters,
+                                      query_modifiers=> $query_modifiers,
+                                    );
+	}
+	else {
+		if (exists($query_parameters{bookingNo}) and exists($query_parameters{weekEndDate})) {
+            $route_parameters{bookingNo} = $query_parameters{bookingNo};
+            $route_parameters{weekEndDate} = $query_parameters{weekEndDate};
+            my ($sql, $query_modifiers) = __get_query_sql('GetTimesheet');
+            my $timesheet = __run_query( query => 'GetTimesheet',
+                                            sql => $sql,
+                                            query_params => \%query_parameters,
+                                            route_params => \%route_parameters,
+                                            body_params => \%body_parameters,
+                                            query_modifiers=> $query_modifiers,
+                                            );
+            debug to_dumper { timesheet => $timesheet };
+            if ($timesheet->{pagination}->{total} < 1) {
+                debug "Building Blank timesheet";
+                return __build_blank_timesheet(%query_parameters);
+            }
+            else {
+                debug "Returning Existing timesheet";
+                return to_json $timesheet;
+            }
+		}
+		else {
+            return '{
+                        "error": "unknown query $query"
+                    }';
+		}
+    }
+}
+sub __build_blank_timesheet {
+    my (%pars) = @_;
+    debug to_dumper { pars => \%pars };
+    my %query_parameters = query_parameters->flatten;
+    my %route_parameters = route_parameters->flatten;
+    my %body_parameters = body_parameters->flatten;
+
+    $route_parameters{bookingNo} = $query_parameters{bookingNo};
+    $route_parameters{weekEndDate} = $query_parameters{weekEndDate};
+    my ($sql, $query_modifiers) = __get_query_sql('GetBookingDetails');
+    my $booking = __run_query( query => 'GetBookingDetails',
+                                    sql => $sql,
+                                    query_params => \%query_parameters,
+                                    route_params => \%route_parameters,
+                                    body_params => \%body_parameters,
+                                    query_modifiers=> $query_modifiers,
+                                    );
+    debug to_dumper { booking => $booking };
+    if ($booking->{pagination}->{total} < 1) {
+        return __error("Booking $query_parameters{bookingNo} does not exist");
+    }
+    my ($sql2m, $qm2) =  __get_query_sql('GetRateCodes');
+    my $ratecodes = __run_query( query => 'GetRateCodes',
+                                    sql => $sql2m,
+                                    query_params => \%query_parameters,
+                                    route_params => \%route_parameters,
+                                    body_params => \%body_parameters,
+                                    query_modifiers=> $qm2,
+                                    );
+    debug to_dumper { ratecodes => $ratecodes };
+    my %ratecodes = ();
+    foreach my $rc (@{ $ratecodes->{data} }) {
+        $ratecodes{$rc->{rc_payrate_no}} = $rc;
+    }
+    $pars{weekEndDate} =~ m/^(\d{4})-?(\d{2})-?(\d{2})/;
+    my ($year, $month, $day) = ($1, $2, $3);
+    debug to_dumper {  weekEndDate => $pars{weekEndDate}, year => $year, month => $month, day => $day };
+
+    my %datetime = ( year => $year,
+                     month => $month,
+                     day => $day,
+                     hour => 1,
+                     minute => 1,
+                     second => 1,
+                    );
+    debug to_dumper {  datetime => \%datetime };
+    my $startofweek = DateTime->new(%datetime)->subtract(days => 6);
+    my @weekdates  = ();
+    foreach my $n (0..6) {
+        push(@weekdates, $startofweek->add(days => $n)->ymd('-'));
+    }
+    debug to_dumper {  weekdates => \@weekdates };
+    my $today = DateTime->today->ymd('-');
+    my $data = { 
+        tp_booking_no => $pars{bookingNo},
+        tp_amend_by => 'api',
+        tp_amend_on => "$today",
+        tp_batch_no => 0,
+        tp_branch => 0,
+        tp_booking_no_V => $pars{bookingNo},
+        tp_client_code => "",
+        tp_client_code_V => "",
+        tp_cost_centre => "",
+        tp_custref => "",
+        tp_error => 0,
+        tp_hours_tot_V => 0,
+        tp_imago_id => 0,
+        tp_json_accept => 0,
+        tp_not_working => 0,
+        tp_process_level => 0,
+        tp_payroll_no_V => 0,
+        tp_recvd_date => "$today",
+        tp_serial_code => "",
+        tp_source => "",
+        tp_surname => "",
+        tp_surname_V => "",
+        tp_type => "P",
+        tp_type_V => "P",
+        tp_week_no => 12,
+        tp_week_no_V => 12,
+        tp_week_date => $pars{weekEndDate},
+        tp_week_date_V => "$pars{weekEndDate}",
+        tp_xfer_date => "$today",
+    };
+    my @allowed_rates = ();
+    debug to_dumper { booking => $booking, data =>  $booking->{'data'} };
+    my $dta = $booking->{data}[0]; 
+    my %ratedetails = ();
+    while (my ($k, $v) = each %{ $dta }) {
+        if ($k =~ m/__(\d_)/) {
+            my $n = $1;
+            $ratedetails{$k} = $v if $dta->{"oa_payrate_no__$n"} > 0;
+        }
+    }
+    debug to_dumper { dta => \%ratedetails };
+    for my $n (1..8) {
+        debug to_dumper { n => $n, rate_no => $dta->{"oa_payrate_no__$n"} };
+        if ($dta->{"oa_payrate_no__${n}"} != 0) {
+            debug to_dumper { n => $n, rate_no => $dta->{"oa_payrate_no__$n"} };
+            my $rd = $ratecodes{$dta->{"oa_payrate_no__$n"}};
+            debug to_dumper { rd => $rd };
+            my %ar = ( hours => $dta->{"oa_rate_hours__$n"},
+                       pay_type => $rd->{rc_pay_type},
+                       pay_rate => $dta->{"oa_payrate__$n"},
+                       inv_rate => $rd->{rc_inv_rate},
+                       payrate_no => $dta->{"oa_payrate_no__$n"},
+                       rate_desc => $rd->{rc_rate_desc},
+                    );
+            debug to_dumper { n => $n, ar => \%ar };
+            push(@allowed_rates, { %ar });
+        }
+    }
+    debug to_dumper { allowed_rates => \@allowed_rates };
+    my @rates = ();
+    foreach my $ar (@allowed_rates) {
+        push(@rates, { code => $ar->{payrate_no},
+                       quantity => 0,
+                       });
+    }
+    $data->{tp_json_entry_hash}{ allowed_rates} = \@allowed_rates;
+    $data->{tp_json_entry_hash}{days} ||= [];
+    foreach my $weekdate (@weekdates) {
+        push(@{ $data->{tp_json_entry_hash}{days}}, { rates => [ @rates ],
+                                                 date => $weekdate });
+        debug to_dumper {  wd => \$weekdate, data => $data, rates => \@rates  };
+    }
+    $data->{tp_json_entry} = to_json($data->{tp_json_entry_hash});
+    delete($data->{tp_json_entry_hash});
+    my $body_parameters = $data;
+    ($sql, $query_modifiers) =  __get_query_sql('NewTimesheet', $body_parameters);
+    my $newtimesheet = __run_query( query => 'NewTimesheet',
+                                    sql => $sql,
+                                    query_params => {},
+                                    route_params => \%route_parameters,
+                                    body_params => $body_parameters,
+                                    query_modifiers=> {limit => -1},
+                                    );
+    debug to_dumper {  newtimesheet => $newtimesheet};
+    my %result = (
+                    debug => {},
+                    data => $data,
+                    status => 0,
+                    pagination => { total => 1,
+                              currentPage => 1,
+                              hasMoreItems => 0,
+                              pages => 1,
+                              perPage => 1,
+                              },
+                    );
+    ($sql, $query_modifiers) =  __get_query_sql('GetTimesheet');
+    my $status = __run_query( query => 'GetTimesheetById',
+                                      sql => $sql,
+                                      query_params => \%query_parameters,
+                                      route_params => \%route_parameters,
+                                      body_params => \%body_parameters,
+                                      query_modifiers=> $query_modifiers,
+                                    );
+    debug to_dumper { status => $status };
+    return to_json $status;
+}
+sub __error {
+		my ($error_message) = @_;
+	return '{
+				"error": "$error_message"
+			}';
 }
 sub GetPendingTimesheets {
     my @passed = @_;
 $DB::single = 1;
     debug "In GetPendingTimesheets";
+    my %result = (
+                    debug => {},
+                    data => [],
+                    status => 0,
+                    );
     my %query_parameters = query_parameters->flatten;
     my %route_parameters = route_parameters->flatten;
     my %body_parameters = body_parameters->flatten;
     my $sql;
     my $query_modifiers;
     ($sql, $query_modifiers) = __get_query_sql('GetBookings');
+    $result{debug}{GetBookings} = $sql;
     $query_modifiers->{limit} = -1;
     $query_modifiers->{fields} = [ qw/oa_booking_no oa_date_start oa_date_end/ ];
     my $bookings = __run_query( query => 'GetBookings',
@@ -99,14 +322,11 @@ $DB::single = 1;
                                       query_modifiers=> $query_modifiers,
                                     );
     debug to_dumper { bookings => $bookings };
-    my %result = (
-                    data => [],
-                    status => 0,
-                    );
     foreach my $booking (@{ $bookings->{data} } ) {
         debug to_dumper { booking => $booking };
         debug "Calling process_query GetBlankTimesheets";
         ($sql, $query_modifiers) = __get_query_sql('GetBlankTimesheets'),
+        $result{debug}{GetBlankTimesheets}{$booking->{oa_booking_no}} = $sql;
         $query_modifiers->{limit} = -1;
         $query_modifiers->{search} = 'oa_booking_no='.$booking->{oa_booking_no};
         my $blank_timesheets = __run_query( query => 'GetBlankTimesheets',
@@ -117,6 +337,7 @@ $DB::single = 1;
                                         query_modifiers=> $query_modifiers,
                                         );
         ($sql, $query_modifiers) = __get_query_sql( 'GetTimesheetHistory'),
+        $result{debug}{GetTimesheetHistory}{$booking->{oa_booking_no}} = $sql;
         $query_modifiers->{limit} = -1;
         $query_modifiers->{search} = 'oa_booking_no='.$booking->{oa_booking_no};
         # TODO add timepool.tp_week_date >= 05-04-2017
@@ -172,6 +393,8 @@ sub GetBookingTimesheets {
                         );
     return to_json $ratecodes;
 }
+=pod
+
 sub NewTimesheet {
     my @passed = @_;
 
@@ -189,79 +412,93 @@ sub NewTimesheet {
             }';
 
 }
+
+=cut
+
 sub __get_query_sql {
-    my ($query) = @_;
+    my ($query, $extra_params) = @_;
     my $sql = undef;
     my $sql_source = $sql_sources->{ $query } || $sql_sources->{ default };
     my $dbh = $database_handles->{ $sql_source };
     my $preprocessed = $queries->{ $sql_source }->{ $query };
-    my %query_parameters = query_parameters->flatten;
-    my %route_parameters = route_parameters->flatten;
-    my %body_parameters = body_parameters->flatten;
-    debug to_dumper {preprocessed => $preprocessed, query_parameters => \%query_parameters,body_parameters=> \%body_parameters,route_parameters => \%route_parameters   };
     my %query_modifiers = ( );
+    my $quoted_pars = {};
+    unless (defined $extra_params) {
+        my %query_parameters = query_parameters->flatten;
+        my %route_parameters = route_parameters->flatten;
+        my %body_parameters = body_parameters->flatten;
+        debug to_dumper {preprocessed => $preprocessed, query_parameters => \%query_parameters,body_parameters=> \%body_parameters,route_parameters => \%route_parameters, extra_params => $extra_params   };
 
-    # each() handles multiple values for same key
-    query_parameters->each( sub {
-        my $par = $_[0];
-        my $val = $_[1];
-        debug to_dumper { par => $par,
-                        val => $val };
+        # each() handles multiple values for same key
+        query_parameters->each( sub {
+            my $par = $_[0];
+            my $val = $_[1];
+            debug to_dumper { par => $par,
+                            val => $val };
 
-        if  ($par =~ m/^sort(\w+)/) {
-            my $field = $1;
-            my $direction = $val eq '1' ? 'ASC' : 'DESC';
-            $query_modifiers{orderby} ||= [];
-            push(@{ $query_modifiers{orderby} }, "$field $direction");
-        } elsif ($par eq 'select') {
-            my @fields = split(',', $val);
-            $query_modifiers{fields} = \@fields;
-        } elsif ($par =~ m/^(limit|page)/) {
-            $query_modifiers{$par} =  $val;
+            if  ($par =~ m/^sort(\w+)/) {
+                my $field = $1;
+                my $direction = $val eq '1' ? 'ASC' : 'DESC';
+                $query_modifiers{orderby} ||= [];
+                push(@{ $query_modifiers{orderby} }, "$field $direction");
+            } elsif ($par =~ m/^like(\w+)/) {
+                my $field = $1;
+                $query_modifiers{where} ||= [];
+                push(@{ $query_modifiers{where} }, qq!$field LIKE '$val'!);
+            } elsif ($par eq 'select') {
+                my @fields = split(',', $val);
+                $query_modifiers{fields} = \@fields;
+            } elsif ($par =~ m/^(limit|page)/) {
+                $query_modifiers{$par} =  $val;
 
-        } else {
-            $query_modifiers{where} ||= [];
-            if ($val =~ m/,/) {
-                my @values = map {$dbh->quote($_) } split(',', $val);
-                push(@{ $query_modifiers{where} }, qq!$par IN !.'('. join(',', @values). ')');
+            } else {
+                $query_modifiers{where} ||= [];
+                if ($val =~ m/,/) {
+                    my @values = map {$dbh->quote($_) } split(',', $val);
+                    push(@{ $query_modifiers{where} }, qq!$par IN !.'('. join(',', @values). ')');
+                }
+                elsif ($val =~ m/^>=/) { # tp_week_date=>=2017-09-21 ->  tp_week_date >= 2017-09-21
+                    $val = substr $val, 2;
+                    push(@{ $query_modifiers{where} }, qq!$par >= !.$dbh->quote($val));
+                }
+                elsif ($val =~ m/^>/) {  # tp_week_date=>2017-09-21  ->  tp_week_date > 2017-09-21
+                    $val = substr $val, 1;
+                    push(@{ $query_modifiers{where} }, qq!$par > !.$dbh->quote($val));
+                }
+                elsif ($val =~ m/^<=/) { # tp_week_date=<=2017-09-21 ->  tp_week_date <= 2017-09-21
+                    $val = substr $val, 2;
+                    push(@{ $query_modifiers{where} }, qq!$par <= !.$dbh->quote($val));
+                }
+                elsif ($val =~ m/</) {   # tp_week_date=<2017-09-21  ->  tp_week_date < 2017-09-21
+                    $val = substr $val, 1;
+                    push(@{ $query_modifiers{where} }, qq!$par < !.$dbh->quote($val));
+                }
+                else {
+                    push(@{ $query_modifiers{where} }, qq!$par = !.$dbh->quote($val));
+                }
             }
-            elsif ($val =~ m/^>=/) { # tp_week_date=>=2017-09-21 ->  tp_week_date >= 2017-09-21
-                $val = substr $val, 2;
-                push(@{ $query_modifiers{where} }, qq!$par >= !.$dbh->quote($val));
-            }
-            elsif ($val =~ m/^>/) {  # tp_week_date=>2017-09-21  ->  tp_week_date > 2017-09-21
-                $val = substr $val, 1;
-                push(@{ $query_modifiers{where} }, qq!$par > !.$dbh->quote($val));
-            }
-            elsif ($val =~ m/^<=/) { # tp_week_date=<=2017-09-21 ->  tp_week_date <= 2017-09-21
-                $val = substr $val, 2;
-                push(@{ $query_modifiers{where} }, qq!$par <= !.$dbh->quote($val));
-            }
-            elsif ($val =~ m/</) {   # tp_week_date=<2017-09-21  ->  tp_week_date < 2017-09-21
-                $val = substr $val, 1;
-                push(@{ $query_modifiers{where} }, qq!$par < !.$dbh->quote($val));
-            }
-            else {
-                push(@{ $query_modifiers{where} }, qq!$par = !.$dbh->quote($val));
-            }
-        }
-    } );
-    debug to_dumper { query_modifiers=> \%query_modifiers };
-    my $quoted_pars = __quote_params({ %route_parameters, %query_parameters, %body_parameters });
-    $quoted_pars->{candId} ||= 200285;
+        } );
+        debug to_dumper { query_modifiers=> \%query_modifiers };
+        $quoted_pars = __quote_params({ %route_parameters, %query_parameters, %body_parameters});
+        $quoted_pars->{candId} ||= 200285;
+    }
+    else {
+        $quoted_pars = __quote_params($extra_params);
+    }
     debug to_dumper { params=> $quoted_pars, modifiers => \%query_modifiers  };
     $tt->process(\$preprocessed, { params => $quoted_pars,
-                                   modifiers => \%query_modifiers}, \$sql) or die $tt->error;
+                                modifiers => \%query_modifiers}, \$sql) or die $tt->error;
     $sql =~ s/\s*$//;
-    my $beautified = $sql_beautifier->query($sql);
-    debug to_dumper {postprocessed => $sql, beautified => $beautified };
+#    my $beautified = $sql_beautifier->query($sql);
+#    debug to_dumper {postprocessed => $sql, beautified => $beautified };
 
-    my $nice_sql = $sql_beautifier->beautify;
+#    my $nice_sql = $sql_beautifier->beautify;
     return ($sql, \%query_modifiers);
 }
 sub process_query {
     my @passed = @_;
 
+    debug "In process_query";
     my %query_parameters = query_parameters->flatten;
     my %route_parameters = route_parameters->flatten;
     my %body_parameters = body_parameters->flatten;
@@ -273,6 +510,7 @@ sub process_query {
     unless (exists( $queries->{ $sql_source }->{ $query })) {
         if (exists( $methods->{$query} )) {
             my $sub = TalApi->can( $query );
+            debug "Calling $query";
 
             return &$sub(@_);
         }
@@ -400,31 +638,43 @@ sub __run_query {
     debug to_dumper { __run_query => \%params };
     my $calc_rows_sql = $params{sql};
     $calc_rows_sql =~ s/select\s+/select SQL_CALC_FOUND_ROWS /mi;
-    debug to_dumper { sql => $params{sql},
-                      calc_rows_sql => $calc_rows_sql };
-    my $sth1 = $database_handles->{ mysql }->prepare($calc_rows_sql) or warn $DBI::errstr;
-    $sth1->execute() or debug "execute failed";
-    my $row_count = $database_handles->{ mysql }->selectrow_array('SELECT FOUND_ROWS()');
+    my $ret;
+    my $sth;
+    my $limit = 0;
+    my $page = 1;
+    my $last_row;
+    my $row_count;
+    if ($calc_rows_sql ne $params{sql}) {
+        debug to_dumper { sql => $params{sql},
+                        calc_rows_sql => $calc_rows_sql };
+        my $sth1 = $database_handles->{ mysql }->prepare($calc_rows_sql) or warn $DBI::errstr;
+        $sth1->execute() or debug "execute failed";
+        $row_count = $database_handles->{ mysql }->selectrow_array('SELECT FOUND_ROWS()');
 
-    my $limit = $params{query_modifiers}{limit} || 5;
-    my $page = $params{query_modifiers}{page} || 1;
-    my $last_row =$row_count;
-    unless ( $limit == -1 ) {
-        my $limit_offset = ($page * $limit) - $limit;
-        $last_row = $limit_offset + $limit;
+        $limit = $params{query_modifiers}{limit} || 5;
+        $page = $params{query_modifiers}{page} || 1;
+        $last_row =$row_count;
+        unless ( $limit == -1 ) {
+            my $limit_offset = ($page * $limit) - $limit;
+            $last_row = $limit_offset + $limit;
 
-        my $limit_clause = " LIMIT $limit_offset, $limit";
-        $params{sql} .= " $limit_clause";
+            my $limit_clause = " LIMIT $limit_offset, $limit";
+            $params{sql} .= " $limit_clause";
+        }
+        debug to_dumper { sql => $params{sql} };
+        $sth = $database_handles->{ mysql }->prepare($params{sql} );
+        $ret = $sth->execute() or debug "execute failed";
     }
-    debug to_dumper { sql => $params{sql} };
-    my $sth = $database_handles->{ mysql }->prepare($params{sql} );
-    my $ret = $sth->execute() or debug "execute failed";
+    else {
+        $sth = $database_handles->{ mysql }->prepare($params{sql} );
+        $ret = $sth->execute() or debug "execute failed";
+        $row_count = $ret;
+    }
     debug to_dumper { sql => $params{sql},
-                      rows => $row_count,
-                      calc_rows_sql => $calc_rows_sql };
+                    rows => $row_count };
 
     my %result = (
-                    debug => { sql => $params{sql} },
+                    debug => { sql => { $params{query} => $params{sql} } },
                     pagination => { total => $row_count },
                     status => defined $ret ? 0 : $sth->errstr,
                     data => [],

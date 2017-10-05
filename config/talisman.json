@@ -14,7 +14,7 @@
     }
   },
   "host": "earth.beacon.co.uk",
-  "basePath": "/api/v5",
+  "basePath": "/api/dev",
   "schemes": [
     "http",
     "https"
@@ -128,7 +128,7 @@
         }
       }
     },
-    "/booking/{bookingNo}/timesheets": {
+    "/timesheet2/{bookingNo}/{weekEndDate}": {
       "get": {
         "tags": [
           "bookingtimesheets"
@@ -138,6 +138,9 @@
         "parameters": [
           {
             "$ref": "#/parameters/bookingNo"
+          },
+          {
+            "$ref": "#/parameters/weekEndDate"
           }
         ],
         "responses": {
@@ -162,7 +165,7 @@
         }
       }
     },
-    "/timesheets/pending": {
+    "/timesheets": {
       "get": {
         "tags": [
           "timesheetspending"
@@ -203,12 +206,30 @@
       }
     },
     "/timesheet": {
+      "get": {
+        "tags": [
+          "gettimesheet"
+        ],
+        "summary": "Get or Create a blank Timesheet",
+        "operationId": "GetTimesheet_sub",
+        "responses": {
+          "200": {
+            "description": "successful response"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+       }
+      },
       "post": {
         "tags": [
-          "newtimesheet"
+          "createoramendtimesheet"
         ],
-        "summary": "New Timesheet",
-        "operationId": "NewTimesheet",
+        "summary": "Create or Amend a Timesheet",
+        "operationId": "CreateOrAmendTimesheet",
         "responses": {
           "200": {
             "description": "successful response"
@@ -222,13 +243,13 @@
         }
       }
     },
-    "/timesheet/{bookingNo}": {
+    "/timesheets/{bookingNo}": {
       "get": {
         "tags": [
-          "gettimesheet"
+          "bookingimesheets"
         ],
-        "summary": "Get Timesheet",
-        "operationId": "GetTimesheet",
+        "summary": "Get all timesheets for a given booking",
+        "operationId": "GetBookingTimesheets",
         "parameters": [
           {
             "$ref": "#/parameters/bookingNo"
