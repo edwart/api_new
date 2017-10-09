@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "0.0.5",
+    "version": "0.0.8",
     "title": "Beacon Talisman REST API",
     "description": "API for accessing Beacon Talisman recruitment software.\n",
     "termsOfService": "http://talisman-recruitment.com/terms/",
@@ -14,7 +14,7 @@
     }
   },
   "host": "earth.beacon.co.uk",
-  "basePath": "/api/v7",
+  "basePath": "/api/v8",
   "schemes": [
     "http",
     "https"

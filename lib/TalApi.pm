@@ -470,6 +470,11 @@ sub __get_query_sql {
                 my $field = $1;
                 $query_modifiers{where} ||= [];
                 push(@{ $query_modifiers{where} }, qq!$field LIKE '$val'!);
+            } elsif ($par =~ m/^between(\w+)/) {
+                my $field = $1;
+                my @values = split(',', $val);
+                $query_modifiers{between} ||= [];
+                push(@{ $query_modifiers{where} }, qq!$field between '!.join("' AND '", @values)."'");
             } elsif ($par eq 'select') {
                 my @fields = split(',', $val);
                 $query_modifiers{fields} = \@fields;
