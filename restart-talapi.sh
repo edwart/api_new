@@ -1,3 +1,7 @@
-./stop-talapi.sh
-rm logs/*
-./start-talapi.sh
+#!/usr/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+$DIR/stop-talapi.sh
+rm $DIR/logs/*
+$DIR/start-talapi.sh "$@"

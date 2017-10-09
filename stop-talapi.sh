@@ -6,5 +6,4 @@ while getopts "p:" arg; do
       ;;
   esac
 done
-echo start_server --port=$port --stop --daemonize --log-file=$PWD/logs/server.log --status-file=$PWD/logs/server.status --pid-file=$PWD/logs/server.pid -- /usr/local/bin/plackup -p $port -s Starman bin/app.psgi
 start_server --port=$port --stop --daemonize --log-file=$PWD/logs/server.log --status-file=$PWD/logs/server.status --pid-file=$PWD/logs/server.pid -- /usr/local/bin/plackup -p $port -s Starman bin/app.psgi

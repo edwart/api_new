@@ -14,7 +14,7 @@
     }
   },
   "host": "earth.beacon.co.uk",
-  "basePath": "/api/dev",
+  "basePath": "/api/v7",
   "schemes": [
     "http",
     "https"
@@ -118,43 +118,6 @@
                 "$ref": "#/definitions/jobNo"
               }
             }
-          },
-          "default": {
-            "description": "unexpected error",
-            "schema": {
-              "$ref": "#/definitions/errorModel"
-            }
-          }
-        }
-      }
-    },
-    "/timesheet2/{bookingNo}/{weekEndDate}": {
-      "get": {
-        "tags": [
-          "bookingtimesheets"
-        ],
-        "summary": "Returns timesheets for booking",
-        "operationId": "GetBookingTimesheets",
-        "parameters": [
-          {
-            "$ref": "#/parameters/bookingNo"
-          },
-          {
-            "$ref": "#/parameters/weekEndDate"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "job response",
-            "schema": {
-              "$ref": "#/definitions/job"
-            }
-          },
-          "400": {
-            "description": "Invalid ID supplied"
-          },
-          "404": {
-            "description": "job not found"
           },
           "default": {
             "description": "unexpected error",

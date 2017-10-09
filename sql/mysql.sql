@@ -124,7 +124,6 @@ SELECT <%- IF modifiers.exists( 'fields') -%>
         <%- END %>
 FROM timepool
 WHERE tp_timesheet_no = <% params.timesheetNo %>
-AND tp_week_date = <% params.weekEndDate %>
 
 [GetTimesheet]
 SELECT <%- IF modifiers.exists( 'fields') -%>
@@ -138,6 +137,12 @@ AND tp_week_date = <% params.weekEndDate %>
 
 [GetBlankTimesheet]
 TODO
+
+[UpdateTimesheet]
+UPDATE timepool
+SET <%- FOREACH param IN params.keys.sort -%><% param = params.$param %><% UNLESS loop.last %>, <% END %>
+<% END %>
+WHERE tp_timesheet_no = <% params.timesheetNo %>
 
 [NewTimesheet]
 INSERT INTO timepool (
@@ -192,5 +197,5 @@ and timepool.tp_extranet_status in ('Paid', 'Approved', 'Entered')
 AND <% modifiers.where.join(" AND ") %>
 <% END -%>
 <%- IF modifiers.exists( 'orderby' ) %>
-ORDER BY <% modifiers.orderby.keys.join(',') %>
+ORDER BY <% modifiers.orderby.join(',') %>
 <% END %>
