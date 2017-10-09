@@ -30,3 +30,6 @@ Makefile.local
 .bundle
 /logs
 *.log
+._.DS_Store
+._*
+PORT
