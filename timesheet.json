@@ -1,0 +1,221 @@
+{
+tp_extranet_status: "Entered",
+tp_week_date: "2017-08-18",
+tp_timesheet_no: "74",
+tp_json_entry: {
+week_rate_total_units: "0",
+status_history: {
+entered: {
+amended_on: "2017-09-25",
+amended_by: "Someone Important"
+}
+},
+week_rate_total_days: "0",
+allowed_rates: [
+{
+hours: "0",
+pay_rate: null,
+pay_type: "hours",
+rate_desc: "Stand Hours Sc",
+payrate_no: "1",
+inv_rate: "0"
+},
+{
+hours: "0",
+pay_rate: null,
+pay_type: "hours",
+rate_desc: "Overtime x 2",
+payrate_no: "2",
+inv_rate: "0"
+}
+],
+lastweek: [
+{
+rates: [
+{
+quantity: "0",
+code: "1"
+},
+{
+quantity: "0",
+code: "2"
+}
+],
+date: "2017-08-05"
+},
+{
+rates: [
+{
+quantity: "0",
+code: "1"
+},
+{
+quantity: "0",
+code: "2"
+}
+],
+date: "2017-08-06"
+},
+{
+rates: [
+{
+quantity: "0",
+code: "1"
+},
+{
+quantity: "0",
+code: "2"
+}
+],
+date: "2017-08-08"
+},
+{
+rates: [
+{
+quantity: "0",
+code: "1"
+},
+{
+quantity: "0",
+code: "2"
+}
+],
+date: "2017-08-11"
+},
+{
+rates: [
+{
+quantity: "0",
+code: "1"
+},
+{
+quantity: "0",
+code: "2"
+}
+],
+date: "2017-08-15"
+},
+{
+rates: [
+{
+quantity: "0",
+code: "1"
+},
+{
+quantity: "0",
+code: "2"
+}
+],
+date: "2017-08-20"
+},
+{
+rates: [
+{
+quantity: "0",
+code: "1"
+},
+{
+quantity: "0",
+code: "2"
+}
+],
+date: "2017-08-26"
+}
+],
+week_rate_total_hours: "70",
+days: [
+{
+rates: [
+{
+quantity: "6",
+code: "1"
+},
+{
+quantity: "8",
+code: "2"
+}
+],
+date: "2017-08-12"
+},
+{
+rates: [
+{
+quantity: "7",
+code: "1"
+},
+{
+quantity: "7",
+code: "2"
+}
+],
+date: "2017-08-13"
+},
+{
+rates: [
+{
+quantity: "1",
+code: "1"
+},
+{
+quantity: "8",
+code: "2"
+}
+],
+date: "2017-08-15"
+},
+{
+rates: [
+{
+quantity: "2",
+code: "1"
+},
+{
+quantity: "6",
+code: "2"
+}
+],
+date: "2017-08-18"
+},
+{
+rates: [
+{
+quantity: "1",
+code: "1"
+},
+{
+quantity: "5",
+code: "2"
+}
+],
+date: "2017-08-22"
+},
+{
+rates: [
+{
+quantity: "4",
+code: "1"
+},
+{
+quantity: "6",
+code: "2"
+}
+],
+date: "2017-08-27"
+},
+{
+rates: [
+{
+quantity: "5",
+code: "1"
+},
+{
+quantity: "4",
+code: "2"
+}
+],
+date: "2017-09-02"
+}
+]
+},
+tp_week_no: "12"
+}

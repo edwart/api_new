@@ -7,6 +7,7 @@ use Dancer2::Plugin::OpenAPI;
 use Dancer2::Plugin::Database;
 use Data::Dumper;
 use YAML::XS 'LoadFile';
+use JSON::DWIW ();
 use Path::Tiny;
 use DateTime;
 use DateTime::Event::Recurrence;
@@ -19,8 +20,9 @@ use Template;
 # set logger => 'null' if $ENV{HARNESS_ACTIVE} && ! $ENV{TEST_VERBOSE};
 set log => 'error' if $ENV{HARNESS_ACTIVE} && ! $ENV{TEST_VERBOSE};
 
-set serializer => 'Mutable';
+#set serializer => 'Mutable';
 
+my $json_obj = JSON::DWIW->new({bare_solidus => 1, pretty => 1});
 my $sql_beautifier = SQL::Beautify->new;
 my $config              = config;
 my $methods             = __get_list_of_methods();
@@ -31,10 +33,16 @@ my $apiconfig           = OpenAPI->get_apiconfig;
 my $tt = new Template(START_TAG => '<%', END_TAG => '%>');
 our $VERSION = '0.1';
 
+=pod
+
 get '/interface' => sub {
 
     template 'interface.tt', { config => $apiconfig };
 };
+
+=cut
+
+
 get '/createtimesheet/:filename' => sub {
 
     my %params = params;
@@ -42,18 +50,21 @@ get '/createtimesheet/:filename' => sub {
     debug to_dumper {query_parameters => \%query_parameters, params => \%params };
     debug 'In createtimesheet get';
 
-    my $fromfile = path(route_parameters->get('filename'))->slurp;
-    debug to_dumper {fromfile => $fromfile };
-    my $data = from_json($fromfile);
+
+    my $file = route_parameters->get('filename');
+    my ($data, $error_msg) = $json_obj->from_json_file($file);
+    debug to_dumper { data => $data, error => $error_msg };
     my $jsondata = $data->{tp_json_entry};
-    my $json = to_json($jsondata);
+    my $json = $json_obj->to_json($jsondata);
     $data->{tp_json_entry} = qq!$json!;
+
+#    set serializer => undef;
+
     debug to_dumper { timesheets => $data };
-
-    set serializer => undef;
-
     template 'timesheet.tt', { timesheets => $data };
 };
+
+
 sub GetApiVersionInfo {
 #    debug to_dumper $apiconfig;
     return to_json $apiconfig->{info};
@@ -99,13 +110,16 @@ sub GetTimesheet_sub {
 }
 sub CreateOrAmendTimesheet {
     my @passed = @_;
-    debug "In GetTimesheet_sub";
+    debug "In CreateOrAmendTimesheet ";
     my %query_parameters = query_parameters->flatten;
     my %route_parameters = route_parameters->flatten;
-    my %body_parameters = route_parameters->flatten;
+    my %body_parameters = body_parameters->flatten;
     my $sql;
     my $query_modifiers;
-    unless (exists($query_parameters{timesheetNo})) {
+    debug to_dumper { query_parameters => \%query_parameters,
+                      route_parameters => \%route_parameters,
+                      body_parameters => \%body_parameters };
+    unless (exists($route_parameters{timesheetNo}) or exists($query_parameters{timesheetNo})) {
         return __error(msg => "Mandatatory parameter timesheetNo missing");
     }
     ($sql, $query_modifiers) = __get_query_sql('GetTimesheetById');
@@ -116,10 +130,52 @@ sub CreateOrAmendTimesheet {
     unless (scalar(@{ $timesheet->{data}}) > 0) {
         return __error(msg => "timesheet $query_parameters{timesheetNo} dowes not exist");
     }
-    my $json_entry = to_json $body_parameters{tp_json_entry} ;
-    $body_parameters{tp_json_entry} = $json_entry;
+    my $data = $timesheet->{data}->[0];
+    my $tp_json_entry = $data->{tp_json_entry};
+    debug to_dumper { tp_json_entry => $tp_json_entry };
+
+    if (exists($body_parameters{days_entry})) {
+    debug to_dumper { days_entry => $body_parameters{days_entry} };
+        my ($days_entry, $error_msg) = $json_obj->from_json($body_parameters{days_entry});
+    debug to_dumper { days_entry => $days_entry, error => $error_msg };
+#        my $days_entry = from_json($body_parameters{days_entry});
+        my %changes = ();
+        foreach my $day (@{ $days_entry }) {
+            my $rates = $day->{rates};
+            for (my $rateno=0; $rateno<scalar(@{ $rates}); $rateno++) {
+                $changes{ $day->{date} }{ $rates->[$rateno]->{code} } =  $rates->[$rateno]->{quantity};
+            }
+        }
+        debug to_dumper { changes => \%changes };
+        for (my $dayno=0; $dayno<scalar(@{ $tp_json_entry->{days} }); $dayno++) {
+            my $day = $tp_json_entry->{days}[$dayno];
+            debug to_dumper { day => $day };
+            if (exists($changes{ $day->{date} })) {
+                my $rates = $day->{rates};
+            debug to_dumper { rates => $rates };
+                for (my $rateno=0; $rateno<scalar(@{ $rates }); $rateno++) {
+                    my $rate = $rates->[$rateno];
+            debug to_dumper { oldday => $tp_json_entry->{days}[$dayno] };
+            debug to_dumper { old => $tp_json_entry->{days}[$dayno]{rates}[$rateno]{quantity},
+                              new => $changes{ $day->{date} }{ $rate->{code} } };
+
+                    delete($tp_json_entry->{days}[$dayno]{quantity}) if exists $tp_json_entry->{days}[$dayno]{quantity};
+                    $tp_json_entry->{days}[$dayno]{rates}[$rateno]{quantity} = $changes{ $day->{date} }{ $rate->{code} };
+
+            debug to_dumper { newday => $tp_json_entry->{days}[$dayno] };
+            debug to_dumper { rate => $rate, dayno => $dayno, newval =>  $changes{ $day->{date} }{ $rate->{code} } };
+                }
+            }
+        }
+    }
+    $body_parameters{tp_json_entry} = to_json($tp_json_entry);
+    $body_parameters{tp_timesheet_no} = $route_parameters{timesheetNo};
+    foreach my $field (keys %body_parameters) {
+        delete( $body_parameters{$field}) unless exists $data->{$field};
+    }
+
     ($sql, $query_modifiers) = __get_query_sql('UpdateTimesheet', { %query_parameters, %body_parameters });
-    return   __run_query( query => 'UpdateTimesheet',
+    return  to_json __run_query( query => 'UpdateTimesheet',
                                     sql => $sql,
                                     query_modifiers=> $query_modifiers,
                                 );
@@ -148,13 +204,6 @@ sub __get_timesheet_for_weekend {
 }
 sub __build_blank_timesheet {
     my (%params) = @_;
-
-=pod
-    my %query_parameters = query_parameters->flatten;
-    my %route_parameters = route_parameters->flatten;
-    my %body_parameters = body_parameters->flatten;
-
-=cut
 
     my $data;
     my @allowed_rates = ();
@@ -470,6 +519,11 @@ sub __get_query_sql {
                 my $field = $1;
                 $query_modifiers{where} ||= [];
                 push(@{ $query_modifiers{where} }, qq!$field LIKE '$val'!);
+            } elsif ($par =~ m/^between(\w+)/) {
+                my $field = $1;
+                my @values = split(',', $val);
+                $query_modifiers{between} ||= [];
+                push(@{ $query_modifiers{where} }, qq!$field between '!.join("' AND '", @values)."'");
             } elsif ($par eq 'select') {
                 my @fields = split(',', $val);
                 $query_modifiers{fields} = \@fields;
@@ -505,7 +559,7 @@ sub __get_query_sql {
         } );
         debug to_dumper { query_modifiers=> \%query_modifiers };
         $quoted_pars = __quote_params({ %route_parameters, %query_parameters, %body_parameters});
-        $quoted_pars->{candId} ||= 200285;
+        $quoted_pars->{candId} ||= 10229;
     }
     else {
         $quoted_pars = __quote_params($extra_params);
@@ -535,7 +589,7 @@ sub process_query {
     unless (exists( $queries->{ $sql_source }->{ $query })) {
         if (exists( $methods->{$query} )) {
             my $sub = TalApi->can( $query );
-            debug "Calling $query";
+            debug "Calling Sub $query";
 
             return &$sub(@_);
         }
@@ -545,6 +599,7 @@ sub process_query {
                     }!;
         }
     }
+    debug "Running query $query";
     my ($sql, $query_modifiers ) = __get_query_sql($query);
     debug to_dumper { sql => $sql, modifiers => $query_modifiers };
 
@@ -691,9 +746,11 @@ sub __run_query {
         $pages = int($sth->rows / $limit);
     }
     else {
+        debug to_dumper { sql => $params{sql} };
         $sth = $database_handles->{ mysql }->prepare($params{sql} );
         $ret = $sth->execute()  or return __error(msg => $DBI::errstr);
-        $row_count = $ret;
+        $row_count = 1;
+        $last_row = $ret;
     }
     debug to_dumper { sql => $params{sql},
                     rows => $row_count };
@@ -717,6 +774,9 @@ sub __run_query {
             }
             push(@{ $result{data } }, $row);
         }
+    }
+    else {
+        delete($result{pagination});
     }
     return \%result;
 }
@@ -750,4 +810,10 @@ sub __financial_year_start_friday {
     return $dt;
 }
 
+sub GetMotd {
+    return q!{ "id": "100", 
+               "title": "ServerOutage",
+               "message": "The System will be unavailable for 1 hour from midnight on 11/10/2017 for essential maintenance"
+             }!;
+};
 true;

@@ -2,8 +2,9 @@
 
 <!--
 <% Dumper.dump_html( timesheets  ) %>
+<form action="http://earth.beacon.co.uk/api/v10/timesheet/<% timesheets.tp_timesheet_no %>" enctype="multipart/form-data" method="post">
 -->
-<form action="http://earth.beacon.co.uk/api/v4/timesheet" enctype="multipart/form-data" method="post">
+<form action="http://earth.beacon.co.uk/api/v10/timesheet/<% timesheets.tp_timesheet_no %>" enctype="multipart/form-data" method="post">
     <table>
         <tr>
             <th>submit details No</th>
@@ -16,11 +17,17 @@
         <tr>
             <th><% field %></th>
             <% IF field == 'tp_json_entry' %>
-            <td><textarea name="tp_json_entry" rows="100" cols="200"><% timesheets.tp_json_entry %></textarea></td>
+<!--            <td><textarea name="tp_json_entry" rows="100" cols="200"><% timesheets.tp_json_entry %></textarea></td> -->
             <% ELSE %>
             <td><input type="text" name="<% field %>" value="<% timesheets.$field %>"/></td>
             <% END %>
         </tr>
         <% END %>
     </table>
+    <td><textarea name="days_entry" rows="100" cols="200">[ { rates: [ { quantity: "12", code: "1" }, { quantity: "13", code: "2" } ], date: "2017-08-12", quantity: "14" }, { rates: [ { quantity: "15", code: "1" }, { quantity: "16", code: "2" } ], date: "2017-08-13" }, { rates: [ { quantity: "14", code: "1" }, { quantity: "8", code: "2" } ], date: "2017-08-15" }, { rates: [ { quantity: "2", code: "1" }, { quantity: "6", code: "2" } ], date: "2017-08-18", quantity: "8" }, { rates: [ { quantity: "1", code: "1" }, { quantity: "5", code: "2" } ], date: "2017-08-22" }, { rates: [ { quantity: "4", code: "1" }, { quantity: "6", code: "2" } ], date: "2017-08-27" }, { rates: [ { quantity: "5", code: "1" }, { quantity: "4", code: "2" } ], date: "2017-09-02" } ]</textarea></td>
 </form>
+<!--
+
+[ { rates: [ { quantity: "6", code: "1" }, { quantity: "8", code: "2" } ], date: "2017-08-12", quantity: "7" }, { rates: [ { quantity: "7", code: "1" }, { quantity: "7", code: "2" } ], date: "2017-08-13" }, { rates: [ { quantity: "1", code: "1" }, { quantity: "8", code: "2" } ], date: "2017-08-15" }, { rates: [ { quantity: "2", code: "1" }, { quantity: "6", code: "2" } ], date: "2017-08-18", quantity: "8" }, { rates: [ { quantity: "1", code: "1" }, { quantity: "5", code: "2" } ], date: "2017-08-22" }, { rates: [ { quantity: "4", code: "1" }, { quantity: "6", code: "2" } ], date: "2017-08-27" }, { rates: [ { quantity: "5", code: "1" }, { quantity: "4", code: "2" } ], date: "2017-09-02" } ]
+    <td><textarea name="days_entry" rows="100" cols="200">[{"rates":[{"quantity":3,"code":"1"},{"quantity":"7","code":"2"}],"date":"2017-02-04"},{"rates":[{"quantity":2,"code":"1"},{"quantity":"1","code": "2"}],"date":"2017-08-12"},{"rates":[{"quantity":3,"code":"1"},{"quantity":"1","code":"2"}],"date":"2017-02-07"},{"rates":[{"quantity":"3","code":"1"},{"quantity":"4","code":"2"}],"date":"2017-02-10"},{"rates":[{"quantity":"7","code":"1"},{"quantity":"5","code":"2"}],"date":"2017-02-14"},{"rates":[{"quantity":3,"code":"1"},{"quantity":"6","code":"2"}],"date":"2017-02-19"},{"rates":[{"quantity":"8","code":"1"},{"quantity":"4","code":"2"}],"date":"2017-02-25"}]</textarea></td>
+-->

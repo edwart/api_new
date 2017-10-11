@@ -30,7 +30,7 @@ plugins:
       connections:
          mysql:
             driver: 'mysql'
-            database: 'Talisman_APITest2'
+            database: 'Talisman_APITest3'
             host: 'localhost'
             port: 3306
             username: 'root'

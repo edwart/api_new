@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "0.0.5",
+    "version": "0.0.8",
     "title": "Beacon Talisman REST API",
     "description": "API for accessing Beacon Talisman recruitment software.\n",
     "termsOfService": "http://talisman-recruitment.com/terms/",
@@ -14,7 +14,7 @@
     }
   },
   "host": "earth.beacon.co.uk",
-  "basePath": "/api/v7",
+  "basePath": "/api/v8",
   "schemes": [
     "http",
     "https"
@@ -186,7 +186,29 @@
             }
           }
        }
-      },
+      }
+    },
+    "/timesheet": {
+      "get": {
+        "tags": [
+          "gettimesheet"
+        ],
+        "summary": "Get or Create a blank Timesheet",
+        "operationId": "GetTimesheet_sub",
+        "responses": {
+          "200": {
+            "description": "successful response"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+       }
+      }
+    },
+    "/timesheet/{timesheetNo}": {
       "post": {
         "tags": [
           "createoramendtimesheet"
@@ -218,6 +240,26 @@
             "$ref": "#/parameters/bookingNo"
           }
         ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
+      }
+    },
+    "/misc/motd": {
+      "get": {
+        "tags": [
+          "motd"
+        ],
+        "summary": "Return Message of the Day",
+        "operationId": "GetMotd",
         "responses": {
           "200": {
             "description": "successful response"

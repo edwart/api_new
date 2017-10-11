@@ -84,3 +84,9 @@ plugins:
            beacon: "sql/bespoke.sql"
         mapping: "sql/mapping.sql"
         datasource: "sql/source.yml"
+
+queries:
+    listcandidates:
+        table: "slcust"
+        field: "slcust.cu_cust_code"
+        field: "slcust.cu_name"

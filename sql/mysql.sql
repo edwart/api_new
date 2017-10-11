@@ -140,9 +140,9 @@ TODO
 
 [UpdateTimesheet]
 UPDATE timepool
-SET <%- FOREACH param IN params.keys.sort -%><% param = params.$param %><% UNLESS loop.last %>, <% END %>
+SET <%- FOREACH param IN params.keys.sort -%><% param %> = <% params.$param %><% UNLESS loop.last %>, <% END %>
 <% END %>
-WHERE tp_timesheet_no = <% params.timesheetNo %>
+WHERE tp_timesheet_no = <% params.tp_timesheet_no %>
 
 [NewTimesheet]
 INSERT INTO timepool (
@@ -180,7 +180,7 @@ AND timepool.tp_extranet_status = ''
 
 [GetTimesheetHistory]
 SELECT <%- IF modifiers.exists( 'fields') -%>
-        <%- modifiers.fields.keys.join(',') -%>
+        <%- modifiers.fields.join(',') -%>
         <%- ELSE -%>
         bookings.oa_booking_no, bookings.oa_assignment, slclient.cu_name, tp_timesheet_no, tp_extranet_status, tp_week_date, tp_week_no, tp_json_entry
         <%- END %>
