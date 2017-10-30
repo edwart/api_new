@@ -86,7 +86,187 @@ plugins:
         datasource: "sql/source.yml"
 
 queries:
-    listcandidates:
-        table: "slcust"
-        field: "slcust.cu_cust_code"
-        field: "slcust.cu_name"
+    GetTimesheetHistory:
+        type: "select"
+        table:
+            timepool: |
+                tp_timesheet_no
+                tp_extranet_status
+                tp_week_date, tp_week_no
+                tp_json_entry
+                tp_hours_tot
+                tp_extranet_queried
+                tp_extranet_query_type
+                tp_extranet_query_reason
+                tp_not_working
+                tp_comment
+            bookings: |
+                oa_booking_no
+                oa_assignment
+            slclient: |
+                cu_name
+        where:
+             bookings:
+                oa_cust_code: slclient.cu_cust_code
+                oa_cand_no: "params.candId"
+             timepool:
+                required:
+                    tp_booking_no: bookings.oa_booking_no
+                    tp_extranet_status:
+                        in: |
+                            Paid
+                            Submitted
+                            Approved
+                            Entered
+                optional:
+                    tp_booking_no: "params.bookingNo"
+    ListCandidates:
+        type: "select"
+        table:
+            cands: "*"
+    ListCustomers:
+        type: "select"
+        table:
+            slcust: |
+                cu_cust_code
+                cu_name
+    GetCustomer:
+        type: "select"
+        table:
+            slcust: "*"
+    GetOpenJobs:
+        type: "select"
+        table:
+            job: "*"
+        where:
+            job:
+                jb_job_status: Open
+    GetJobDetails:
+        type: "select"
+        table:
+            job: "*"
+        where:
+            jb_job_no: "params.jobNo"
+    GetRateCodes:
+        type: "select"
+        table:
+            ratecode: "*"
+    GetBookingRateCodes:
+        type: "select"
+        table:
+            bookings: |
+                oa_booking_no
+                oa_contractcust
+                oa_payrate_no__1
+                oa_payrate_no__2
+                oa_payrate_no__3
+                oa_payrate_no__4
+                oa_payrate_no__5
+                oa_payrate_no__6
+                oa_payrate_no__7
+                oa_payrate_no__8
+        where:
+            oa_cand_no: "params.candNo"
+    GetBookingDetails:
+        type: "select"
+        table:
+            bookings: "*"
+        where:
+            bookings:
+                oa_booking_no: "params.bookingNo"
+    GetBookings:
+        type: "select"
+        table:
+            bookings: "*"
+        where:
+            bookings:
+                oa_cand_no: "params.candId"
+    GetBookingTimesheets:
+        type: "select"
+        table:
+            timepool: "*"
+        where:
+            timepool:
+                tp_booking_no: "params.bookingNo"
+    GetTimesheetById:
+        type: "select"
+        table:
+            timepool: "*"
+            bookings: oa_assignment
+            slclient: cu_name
+            cands: "*"
+        where:
+            timepool:
+                tp_timesheet_no: "params.timesheetNo"
+            bookings:
+                oa_booking_no: "timepool.tp_booking_no"
+            slclient:
+                cu_cuat_code: bookings.oa_cust_code
+            cands:
+                cand_cand_no: bookings.oa_cand_no
+    GetTimesheet:        
+        type: "select"
+        table:
+            timepool: "*"
+            bookings: |
+                oa_rate_hours__1
+                oa_rate_hours__2
+                oa_rate_hours__3
+                oa_rate_hours__4
+                oa_rate_hours__5
+                oa_rate_hours__6
+                oa_rate_hours__7
+                oa_rate_hours__8
+        where:
+            timepool:
+                tp_booking_no: "params.bookingNo"
+                tp_week_date: "params.weekEndDate"
+            bookings:
+                oa_booking_no: "params.bookingNo"
+    GetBlankTimesheets:
+        type: "select"
+        table:
+            timepool: |
+                tp_timesheet_no
+                tp_week_date
+        where:
+            timepool:
+                tp_booking_no: bookings.oa_booking_no
+            bookings:
+                oa_cand_no: params.candId
+                oa_booking_no: params.bookingNo
+    GetTimesheetHistory:
+        type: "select"
+        table:
+            timepool: |
+                tp_timesheet_no
+                tp_extranet_status
+                tp_week_date
+                tp_week_no
+                tp_json_entry
+                tp_hours_tot
+                tp_extranet_queried
+                tp_extranet_query_type
+                tp_extranet_query_reason
+                tp_not_working
+                tp_comment
+            bookings: |
+                oa_booking_no
+                oa_assignment
+            slclient: cu_name
+        where:
+            timepool:
+                tp_booking_no: bookings.oa_booking_no
+            bookings:
+                oa_cand_no: "params.bookingNo"
+            slclient:
+                cu_cust_code: oa_cust_code
+    UpdateTimesheet:
+        type: "update"
+        table: timepool
+        where:
+            timepool:
+                tp_timesheet_no: params.timesheetNo
+    InsertTimesheet:
+        type: "insert"
+        table: timepool
