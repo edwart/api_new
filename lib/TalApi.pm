@@ -646,6 +646,7 @@ sub __get_query_sql {
     my @bind = ();
     my $sql_source = $sql_sources->{ $query } || $sql_sources->{ default };
     my $dbh = $database_handles->{ $sql_source };
+<<<<<<< HEAD
     my %query_parameters = query_parameters->flatten;
     my %route_parameters = route_parameters->flatten;
     my %body_parameters = body_parameters->flatten;
@@ -665,6 +666,66 @@ sub __get_query_sql {
                     foreach my $field (split(/\n/, $qd->{table}->{$table})) {
                     $fields{"$table.$field"} = 1;
                     }
+=======
+    my $preprocessed = $queries->{ $sql_source }->{ $query };
+    my %query_modifiers = ( );
+    my $quoted_pars = {};
+    unless (defined $extra_params) {
+        my %query_parameters = query_parameters->flatten;
+        my %route_parameters = route_parameters->flatten;
+        my %body_parameters = body_parameters->flatten;
+        debug to_dumper {preprocessed => $preprocessed, query_parameters => \%query_parameters,body_parameters=> \%body_parameters,route_parameters => \%route_parameters, extra_params => $extra_params   };
+
+        # each() handles multiple values for same key
+        query_parameters->each( sub {
+            my $par = $_[0];
+            my $val = $_[1];
+            debug to_dumper { par => $par,
+                            val => $val };
+
+            if  ($par =~ m/^sort(\w+)/) {
+                my $field = $1;
+                my $direction = $val eq '1' ? 'ASC' : 'DESC';
+                debug "sort by $field in direction $direction";
+                $query_modifiers{orderby} ||= [];
+                push(@{ $query_modifiers{orderby} }, "$field $direction");
+            } elsif ($par =~ m/^like(\w+)/) {
+                my $field = $1;
+                $query_modifiers{where} ||= [];
+                push(@{ $query_modifiers{where} }, qq!$field LIKE '$val'!);
+            } elsif ($par =~ m/^between(\w+)/) {
+                my $field = $1;
+                my @values = split(',', $val);
+                $query_modifiers{between} ||= [];
+                push(@{ $query_modifiers{where} }, qq!$field between '!.join("' AND '", @values)."'");
+            } elsif ($par eq 'select') {
+                my @fields = split(',', $val);
+                $query_modifiers{fields} = \@fields;
+            } elsif ($par =~ m/^(limit|page)/) {
+                $query_modifiers{$par} =  $val;
+
+            } else {
+                $query_modifiers{where} ||= [];
+                if ($val =~ m/,/) {
+                    my @values = map {$dbh->quote($_) } split(',', $val);
+                    push(@{ $query_modifiers{where} }, qq!$par IN !.'('. join(',', @values). ')');
+                }
+                elsif ($val =~ m/^>=/) { # tp_week_date=>=2017-09-21 ->  tp_week_date >= 2017-09-21
+                    $val = substr $val, 2;
+                    push(@{ $query_modifiers{where} }, qq!$par >= !.$dbh->quote($val));
+                }
+                elsif ($val =~ m/^>/) {  # tp_week_date=>2017-09-21  ->  tp_week_date > 2017-09-21
+                    $val = substr $val, 1;
+                    push(@{ $query_modifiers{where} }, qq!$par > !.$dbh->quote($val));
+                }
+                elsif ($val =~ m/^<=/) { # tp_week_date=<=2017-09-21 ->  tp_week_date <= 2017-09-21
+                    $val = substr $val, 2;
+                    push(@{ $query_modifiers{where} }, qq!$par <= !.$dbh->quote($val));
+                }
+                elsif ($val =~ m/</) {   # tp_week_date=<2017-09-21  ->  tp_week_date < 2017-09-21
+                    $val = substr $val, 1;
+                    push(@{ $query_modifiers{where} }, qq!$par < !.$dbh->quote($val));
+>>>>>>> 88fa97ff95907b1131bff4d53bb8bc2b8232ef0d
                 }
             }
             debug to_dumper { query_definition => $qd };

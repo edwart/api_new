@@ -75,13 +75,14 @@ sub update_timesheet {
     $json_entry->{week_rate_total_units} = 0;
     my %rates = ();
     my @days = ( 0, 0.25, 0.5, 0.75, 1.0) ;
-    my $status_ind = int(rand(3));
-    my @statuses = ("entered",
-                    "approved",
-                    "paid",
-                    );
+    my @statuses = ("Entered",
+                    "Completed",
+                    "Paid",
+                    "Awaiting entry",
+                    "Awaiting authorization",
+                    "Queried");
     my @who = ("John Doe", "Someone Else", "The Boss", "Someone Important");
-    my $tp_extranet_status = $statuses[ $status_ind  ];
+    my $tp_extranet_status = $statuses[ int(rand(6)) ];
     $json_entry->{status_history} = {};
     for (my $n = 0; $n <= $status_ind; $n++) {
         my $status = $statuses[ $n ];
