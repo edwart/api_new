@@ -1,0 +1,49 @@
+{
+   "abstract" : "Middleware to provide LemonLDAP support for Plack applications",
+   "author" : [
+      "Renee Bäcker <reneeb@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 5.015, CPAN::Meta::Converter version 2.141170, CPAN::Meta::Converter version 2.143240",
+   "license" : [
+      "artistic_2"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Plack-Middleware-LemonLDAP-BasicAuth",
+   "prereqs" : {
+      "build" : {
+         "requires" : {}
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.30"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "MIME::Base64" : "0",
+            "Plack" : "0",
+            "Plack::Middleware::Auth::Basic" : "0",
+            "SOAP::Lite" : "0",
+            "parent" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {}
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "http://github.com/reneeb/Plack-Middleware-LemonLDAP-BasicAuth/issues"
+      },
+      "homepage" : "http://github.com/reneeb/Plack-Middleware-LemonLDAP-BasicAuth",
+      "repository" : {
+         "url" : "http://github.com/reneeb/Plack-Middleware-LemonLDAP-BasicAuth.git"
+      }
+   },
+   "version" : "0.02"
+}

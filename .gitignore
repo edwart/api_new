@@ -33,3 +33,4 @@ Makefile.local
 ._.DS_Store
 ._*
 PORT
+public/css/bootstrap*

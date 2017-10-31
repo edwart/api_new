@@ -1,0 +1,10 @@
+/home/tonye/tal_api_sprint3_dev3/perl5lib/bin/starman
+/home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5/HTTP/Server/PSGI/Net/Server/PreFork.pm
+/home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5/Plack/Handler/Starman.pm
+/home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5/Starman.pm
+/home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5/Starman/Server.pm
+/home/tonye/tal_api_sprint3_dev3/perl5lib/man/man1/starman.1
+/home/tonye/tal_api_sprint3_dev3/perl5lib/man/man3/HTTP::Server::PSGI::Net::Server::PreFork.3pm
+/home/tonye/tal_api_sprint3_dev3/perl5lib/man/man3/Plack::Handler::Starman.3pm
+/home/tonye/tal_api_sprint3_dev3/perl5lib/man/man3/Starman.3pm
+/home/tonye/tal_api_sprint3_dev3/perl5lib/man/man3/Starman::Server.3pm

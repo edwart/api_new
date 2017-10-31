@@ -55,7 +55,7 @@
         ],
         "summary": "List Talisman candidates",
         "description": "Returns an array of candidates ",
-        "operationId": "listcandidates",
+        "operationId": "ListCandidates",
         "responses": {
           "200": {
             "description": "successful response",
@@ -188,13 +188,13 @@
        }
       }
     },
-    "/timesheet": {
-      "get": {
+    "/loadlasttimesheet/{timesheetNo}": {
+      "post": {
         "tags": [
-          "gettimesheet"
+          "loadlastweektimesheet"
         ],
-        "summary": "Get or Create a blank Timesheet",
-        "operationId": "GetTimesheet_sub",
+        "summary": "Load Last weeks Timesheet",
+        "operationId": "LoadLastWeekTimesheet",
         "responses": {
           "200": {
             "description": "successful response"
@@ -205,7 +205,7 @@
               "$ref": "#/definitions/errorModel"
             }
           }
-       }
+        }
       }
     },
     "/timesheet/{timesheetNo}": {
@@ -238,6 +238,32 @@
         "parameters": [
           {
             "$ref": "#/parameters/bookingNo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
+      }
+    },
+    "/timesheet/{bookingNo}/{weekendDate}": {
+      "get": {
+        "tags": [
+          "timesheetbybooking"
+        ],
+        "summary": "Get a timesheets for a given booking and weekend date",
+        "operationId": "GetTimesheet",
+        "parameters": [
+          {
+            "$ref": "#/parameters/bookingNo",
+            "$ref": "#/parameters/weekEndDate"
           }
         ],
         "responses": {

@@ -1,0 +1,660 @@
+=head2 Thu Oct 19 16:49:19 2017: C<Module> L<Ref::Util::XS|Ref::Util::XS>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.116>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:49:21 2017: C<Module> L<Ref::Util|Ref::Util>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.203>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:49:23 2017: C<Module> L<HTTP::XSCookies|HTTP::XSCookies>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.000014>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:50:28 2017: C<Module> L<Dancer2|Dancer2>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.205002>
+
+=item *
+
+C<EXE_FILES: script/dancer2>
+
+=back
+
+=head2 Thu Oct 19 16:51:16 2017: C<Module> L<Task::Dancer2|Task::Dancer2>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.06>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:52:25 2017: C<Module> L<Plack|Plack>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.0044>
+
+=item *
+
+C<EXE_FILES: script/plackup>
+
+=back
+
+=head2 Thu Oct 19 16:53:15 2017: C<Module> L<DBD::SQLite|DBD::SQLite>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.54>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:53:34 2017: C<Module> L<HTTP::Server::Simple|HTTP::Server::Simple>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.52>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:55:49 2017: C<Module> L<Plack|Plack>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.0044>
+
+=item *
+
+C<EXE_FILES: script/plackup>
+
+=back
+
+=head2 Thu Oct 19 16:55:52 2017: C<Module> L<Dancer2::Plugin::Database|Dancer2::Plugin::Database>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.17>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:56:42 2017: C<Module> L<DBD::SQLite|DBD::SQLite>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.54>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:57:01 2017: C<Module> L<HTTP::Server::Simple|HTTP::Server::Simple>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.52>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 16:57:02 2017: C<Module> L<HTTP::Server::Simple::PSGI|HTTP::Server::Simple::PSGI>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.16>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:03:25 2017: C<Module> L<Net::Server::SS::PreFork|Net::Server::SS::PreFork>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.05>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:05:44 2017: C<Module> L<MooseX::DataModel|MooseX::DataModel>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.00>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:05:45 2017: C<Module> L<SQL::Library|SQL::Library>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.0.5>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:05:46 2017: C<Module> L<OpenAPI|OpenAPI>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.001>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:05:57 2017: C<Module> L<JSON::Validator|JSON::Validator>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.04>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:06:04 2017: C<Module> L<YAML::LibYAML|YAML::LibYAML>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.66>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:06:15 2017: C<Module> L<JSON::DWIW|JSON::DWIW>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.47>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:07:46 2017: C<Module> L<ack|ack>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.18>
+
+=item *
+
+C<EXE_FILES: ack>
+
+=back
+
+=head2 Thu Oct 19 17:07:49 2017: C<Module> L<HTTP::Tiny|HTTP::Tiny>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.070>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:10:06 2017: C<Module> L<Plack::Middleware::CrossOrigin|Plack::Middleware::CrossOrigin>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.012>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:10:13 2017: C<Module> L<DateTime::Event::Recurrence|DateTime::Event::Recurrence>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:10:30 2017: C<Module> L<SQL::Abstract|SQL::Abstract>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.84>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Oct 19 17:10:41 2017: C<Module> L<PDF::API2|PDF::API2>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.033>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Oct 20 15:03:54 2017: C<Module> L<IO::SessionData|IO::SessionData>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Oct 20 15:03:55 2017: C<Module> L<XML::Parser::Lite|XML::Parser::Lite>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.721>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Oct 20 15:04:03 2017: C<Module> L<SOAP::Lite|SOAP::Lite>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.22>
+
+=item *
+
+C<EXE_FILES: bin/SOAPsh.pl bin/stubmaker.pl>
+
+=back
+
+=head2 Fri Oct 20 15:04:03 2017: C<Module> L<Plack::Middleware::LemonLDAP::BasicAuth|Plack::Middleware::LemonLDAP::BasicAuth>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tonye/tal_api_sprint3_dev3/perl5lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.02>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

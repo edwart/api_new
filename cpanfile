@@ -22,6 +22,13 @@ requires "DateTime::Event::Recurrence" => "0";
 requires "Data::Rand" => 0;
 requires "SQL::Abstract" => 0;
 requires "DateTime::Format::DateParse" => "0";
+requires "PDF::API2" => "0";
+requires "HTTP::Status" => "0";
+requires "CGI::Session" => "0";
+requires "Crypt::SSLeay" => "0";
+requires "Alien::Tidyp" => "0";
+requires "HTML::Tidy" => "0";
+requires "PDF::FromHTML" => "0";
 
 recommends "YAML"             => "0";
 recommends "URL::Encode::XS"  => "0";

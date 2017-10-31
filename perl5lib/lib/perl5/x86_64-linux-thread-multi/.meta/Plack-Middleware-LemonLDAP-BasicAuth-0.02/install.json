@@ -1,0 +1,1 @@
+{"provides":{"Plack::Middleware::LemonLDAP::BasicAuth":{"version":"0.02","file":"Plack/Middleware/LemonLDAP/BasicAuth.pm"}},"target":"Plack::Middleware::LemonLDAP::BasicAuth","version":"0.02","name":"Plack::Middleware::LemonLDAP::BasicAuth","dist":"Plack-Middleware-LemonLDAP-BasicAuth-0.02","pathname":"R/RE/RENEEB/Plack-Middleware-LemonLDAP-BasicAuth-0.02.tar.gz"}

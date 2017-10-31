@@ -1,0 +1,50 @@
+{
+   "abstract" : "a hot-deployable variant of Net::Server::PreFork",
+   "author" : [
+      "Kazuho Oku"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Install version 0.93, CPAN::Meta::Converter version 2.143240",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Net-Server-SS-PreFork",
+   "no_index" : {
+      "directory" : [
+         "inc",
+         "t"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.42",
+            "HTTP::Server::Simple::CGI" : "0",
+            "LWP::Simple" : "0",
+            "Test::TCP" : "0.06"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Net::Server" : "0",
+            "Server::Starter" : "0.02"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ]
+   },
+   "version" : "0.05"
+}

@@ -1,0 +1,50 @@
+{
+   "abstract" : "Dancer2... in a box!",
+   "author" : [
+      "Jason A. Crome <cromedome@cpan.org>",
+      "Sawyer X <xsawyerx@cpan.org>",
+      "Alberto Simoes <ambs@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dancer, CPAN::Meta::Converter version 2.143240",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Task-Dancer2",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.36"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Dancer2" : "0",
+            "Dancer2::Plugin::DBIC" : "0",
+            "Dancer2::Plugin::Database" : "0"
+         }
+      }
+   },
+   "provides" : {
+      "Task::Dancer2" : {
+         "file" : "lib/Task/Dancer2.pm",
+         "version" : "0.06"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ]
+   },
+   "version" : "0.06"
+}

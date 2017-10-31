@@ -120,23 +120,24 @@ ORDER BY <% modifiers.orderby.keys.join(',') %>
 SELECT <%- IF modifiers.exists( 'fields') -%>
         <%- modifiers.fields.keys.join(',') -%>
         <%- ELSE -%>
-        *
+        timepool.*,slclient.cu_name,bookings.oa_assignment, cands.* 
         <%- END %>
-FROM timepool
+FROM timepool, bookings, slclient, cands
 WHERE tp_timesheet_no = <% params.timesheetNo %>
+AND bookings.oa_booking_no = timepool.tp_booking_no
+AND bookings.oa_cust_code = slclient.cu_cust_code
+AND cands.cand_cand_no = bookings.oa_cand_no
 
 [GetTimesheet]
 SELECT <%- IF modifiers.exists( 'fields') -%>
-        <%- modifiers.fields.keys.join(',') -%>
+        <%- modifiers.fields.keys.join(',') -%>311G
         <%- ELSE -%>
-        *
+        timepool.*,<% FOREACH n IN [1, 2, 3, 4, 5, 6, 7, 8] %>bookings.oa_rate_hours__<% n %><% IF n < 8 %>,<% END %><%END %>
         <%- END %>
-FROM timepool
+FROM timepool, bookings
 WHERE tp_booking_no = <% params.bookingNo %>
-AND tp_week_date = <% params.weekEndDate %>
-
-[GetBlankTimesheet]
-TODO
+AND bookings.oa_booking_no = <% params.bookingNo %>
+AND tp_week_date = <% params.weekendDate %>
 
 [UpdateTimesheet]
 UPDATE timepool
@@ -172,9 +173,15 @@ SELECT tp_timesheet_no, tp_week_date
 FROM timepool, bookings
 WHERE timepool.tp_booking_no = bookings.oa_booking_no
 AND bookings.oa_cand_no = <% params.candId %>
-AND timepool.tp_extranet_status = ''
+AND timepool.tp_extranet_status = '' 
+<%- IF  params.exists( 'bookingNo') %>
+AND bookings.oa_booking_no = <% params.bookingNo %>
+<% END -%>
+<%- IF  modifiers.exists( 'where') %>
+<% modifiers.where.join(" AND ") %>
+<% END -%>
 <%- IF  modifiers.exists( 'search') %>
-<% modifiers.search.keys.join(" AND ") %>
+<% modifiers.search.join(" AND ") %>
 <% END -%>
 
 
@@ -182,19 +189,23 @@ AND timepool.tp_extranet_status = ''
 SELECT <%- IF modifiers.exists( 'fields') -%>
         <%- modifiers.fields.join(',') -%>
         <%- ELSE -%>
-        bookings.oa_booking_no, bookings.oa_assignment, slclient.cu_name, tp_timesheet_no, tp_extranet_status, tp_week_date, tp_week_no, tp_json_entry
+        bookings.oa_booking_no, bookings.oa_assignment, slclient.cu_name, tp_timesheet_no, tp_extranet_status, tp_week_date, tp_week_no, tp_json_entry, tp_hours_tot, tp_extranet_queried, tp_extranet_query_type, tp_extranet_query_reason, tp_not_working, tp_comment
         <%- END %>
 FROM timepool, bookings
      LEFT JOIN xbookings ON bookings.oa_booking_no = xbookings.xoa_booking_no
      LEFT JOIN slclient  ON bookings.oa_cust_code = slclient.cu_cust_code
 WHERE timepool.tp_booking_no = bookings.oa_booking_no
 AND bookings.oa_cand_no = <% params.candId %>
-and timepool.tp_extranet_status in ('Paid', 'Approved', 'Entered')
-<%- IF  modifiers.exists( 'search') %>
-<% modifiers.search.keys.join(" AND ") %>
+AND timepool.tp_extranet_status in ('Paid', 'Submitted', 'Approved', 'Entered')
+<%- IF  params.exists( 'bookingNo') %>
+AND timepool.tp_booking_no = <% params.bookingNo %>
 <% END -%>
+
 <%- IF  modifiers.exists( 'where') %>
-AND <% modifiers.where.join(" AND ") %>
+<% modifiers.where.join(" AND ") %>
+<% END -%>
+<%- IF  modifiers.exists( 'search') %>
+<% modifiers.search.join(" AND ") %>
 <% END -%>
 <%- IF modifiers.exists( 'orderby' ) %>
 ORDER BY <% modifiers.orderby.join(',') %>

@@ -1,0 +1,39 @@
+{
+   "abstract" : "Parses Date::Parse compatible formats",
+   "author" : [
+      "Joshua Hoblitt (JHOBLITT) <jhoblitt@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.422",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "DateTime-Format-DateParse",
+   "prereqs" : {
+      "runtime" : {
+         "requires" : {
+            "Date::Parse" : "2.27",
+            "DateTime" : "0.29",
+            "DateTime::TimeZone" : "0.27",
+            "Time::Zone" : "2.22"
+         }
+      }
+   },
+   "provides" : {
+      "DateTime::Format::DateParse" : {
+         "file" : "lib/DateTime/Format/DateParse.pm",
+         "version" : "0.05"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ]
+   },
+   "version" : "0.05"
+}

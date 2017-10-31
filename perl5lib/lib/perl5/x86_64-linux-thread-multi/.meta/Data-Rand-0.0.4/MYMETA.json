@@ -1,0 +1,28 @@
+{
+   "abstract" : "unknown",
+   "author" : [
+      "unknown"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.422",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Data-Rand",
+   "prereqs" : {
+      "runtime" : {
+         "requires" : {
+            "Test::More" : "0",
+            "version" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.0.4",
+   "x_installdirs" : "site",
+   "x_version_from" : "lib/Data/Rand.pm"
+}
