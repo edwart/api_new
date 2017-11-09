@@ -17,8 +17,9 @@ use FindBin qw/ $Bin /;
 use File::Basename qw/ dirname /;
 use SQL::Library;
 use SQL::Abstract;
+#use SQL::Abstract::More;
 use Template;
-prefix '/api/dev3';
+prefix '/api/dev8';
 #
 # set logger => 'null' if $ENV{HARNESS_ACTIVE} && ! $ENV{TEST_VERBOSE};
 set log => 'error' if $ENV{HARNESS_ACTIVE} && ! $ENV{TEST_VERBOSE};
@@ -71,7 +72,7 @@ get '/images/*' => sub {
 
 get '/pdf/timesheet/:timesheetid' => sub {
     debug 'In pdf timesheet';
-    my ($sql, $bind) = __get_query_sql('GetTimesheetById', {timesheetNo => param('timesheetid') });
+    my ($sql, $bind) = __get_query_sql('GetTimesheetById', 'params.timesheetNo' => param('timesheetId') );
     debug "sql = $sql";
     my $data = __run_query( query => 'GetTimesheetById',
                                       sql => $sql,
@@ -84,7 +85,7 @@ get '/pdf/timesheet/:timesheetid' => sub {
 };
 get '/pdf/timesheet2/:timesheetid' => sub {
     debug 'In pdf timesheet';
-    my ($sql, $bind) = __get_query_sql('GetTimesheetById', {timesheetNo => param('timesheetid') });
+    my ($sql, $bind) = __get_query_sql('GetTimesheetById', 'params.timesheetNo' => param('timesheetid') );
     debug "sql = $sql";
     my $data = __run_query( query => 'GetTimesheetById',
                                       sql => $sql,
@@ -125,7 +126,7 @@ sub GetApiVersionInfo {
 sub LoadLastWeekTimesheet {
     my %params = @_;
     my $query_config = $params{query_config};
-    debug "In CreateOrAmendTimesheet ";
+    debug "In  LoadLastWeekTimesheet ";
     my %query_parameters = query_parameters->flatten;
     my %route_parameters = route_parameters->flatten;
     my %body_parameters = body_parameters->flatten;
@@ -148,48 +149,19 @@ sub LoadLastWeekTimesheet {
                        msg => "timesheet $query_parameters{timesheetNo} does not exist");
     }
     my $data = $timesheet->{data}->[0];
-    my $tp_json_entry = $data->{tp_json_entry};
+    my $tp_json_entry = $json_obj->from_json($data->{tp_json_entry});
+    unless (exists($tp_json_entry->{previous_week})) {
+        return __error(code => HTTP_PRECONDITION_FAILED,
+                       msg => "No Previous week data to load");
+    }
+    my $tp_json_entry_saved = { %{ $tp_json_entry->{days} } };
     debug to_dumper { tp_json_entry => $tp_json_entry };
 
     if (exists($body_parameters{days_entry})) {
-        debug to_dumper { days_entry => $body_parameters{days_entry} };
-        my ($days_entry, $error_msg) = $json_obj->from_json($body_parameters{days_entry});
-        debug to_dumper { days_entry => $days_entry, error => $error_msg };
-#        my $days_entry = from_json($body_parameters{days_entry});
-        my %changes = ();
-        foreach my $day (@{ $days_entry }) {
-            my $rates = $day->{rates};
-            for (my $rateno=0; $rateno<scalar(@{ $rates}); $rateno++) {
-                $changes{ $day->{date} }{ $rates->[$rateno]->{code} } =  $rates->[$rateno]->{quantity};
-            }
-        }
-        debug to_dumper { changes => \%changes };
-        for (my $dayno=0; $dayno<scalar(@{ $tp_json_entry->{days} }); $dayno++) {
-            my $day = $tp_json_entry->{days}[$dayno];
-            debug to_dumper { day => $day };
-            if (exists($changes{ $day->{date} })) {
-                my $rates = $day->{rates};
-                debug to_dumper { rates => $rates };
-                for (my $rateno=0; $rateno<scalar(@{ $rates }); $rateno++) {
-                    my $rate = $rates->[$rateno];
-                    debug to_dumper { oldday => $tp_json_entry->{days}[$dayno] };
-                    debug to_dumper { old => $tp_json_entry->{days}[$dayno]{rates}[$rateno]{quantity},
-                              new => $changes{ $day->{date} }{ $rate->{code} } };
-
-                    delete($tp_json_entry->{days}[$dayno]{quantity}) if exists $tp_json_entry->{days}[$dayno]{quantity};
-                    $tp_json_entry->{days}[$dayno]{rates}[$rateno]{quantity} = $changes{ $day->{date} }{ $rate->{code} };
-
-                    debug to_dumper { newday => $tp_json_entry->{days}[$dayno] };
-                    debug to_dumper { rate => $rate, dayno => $dayno, newval =>  $changes{ $day->{date} }{ $rate->{code} } };
-                }
-            }
-        }
+        $tp_json_entry->{changessaved} = $body_parameters{days_entry};
     }
-    $body_parameters{tp_json_entry} = to_json($tp_json_entry);
-    $body_parameters{tp_timesheet_no} = $route_parameters{timesheetNo};
-    foreach my $field (keys %body_parameters) {
-        delete( $body_parameters{$field}) unless exists $data->{$field};
-    }
+    $tp_json_entry->{dayssaved} = $tp_json_entry->{days};
+    $tp_json_entry->{days} = $tp_json_entry->{previous_week};
 
     ($sql, $bind) = __get_query_sql('UpdateTimesheet', query_config => $query_config, body_parameters => %body_parameters );
     return  to_json __run_query( query => 'UpdateTimesheet',
@@ -206,7 +178,9 @@ sub GetTimesheet_sub {
     my %route_parameters = route_parameters->flatten;
     my $sql;
     my $bind;
-    if (exists($query_parameters{timesheetNo})) {
+    my %all_parameters = ( %query_parameters, %route_parameters );
+    debug to_dumper { query_parameters => \%query_parameters, route_parameters => \%route_parameters };
+    if (exists($all_parameters{timesheetNo})) {
 	    ($sql, $bind) = __get_query_sql('GetTimesheetById', query_config => $query_config);
 		return __run_query( query => 'GetTimesheetById',
                                       sql => $sql,
@@ -214,22 +188,29 @@ sub GetTimesheet_sub {
                                     );
 	}
 	else {
-		if (exists($query_parameters{bookingNo}) and exists($query_parameters{weekEndDate})) {
+		if (exists($all_parameters{bookingNo}) and exists($all_parameters{weekEndDate})) {
             my $timesheet = __get_timesheet_for_weekend( query_config => $query_config,
-                                                         bookingNo => $query_parameters{bookingNo},
-                                                         weekEndDate => $query_parameters{weekEndDate});
+                                                         bookingNo => $all_parameters{bookingNo},
+                                                         weekEndDate => $all_parameters{weekEndDate});
+            debug to_dumper { timesheet => $timesheet };
             if ($timesheet->{pagination}->{total} < 1) {
                 # get last week's if it exists
-                my $lastweekenddate = __get_previous_weekdate($query_parameters{weekEndDate});
+                my $lastweekenddate = __get_previous_weekdate($all_parameters{weekEndDate});
                 my $lastweek_timesheet = __get_timesheet_for_weekend( query_config => $query_config,
-                                                                      bookingNo => $query_parameters{bookingNo},
+                                                                      bookingNo => $all_parameters{bookingNo},
                                                                       weekEndDate => $lastweekenddate );
                 debug "Building Blank timesheet";
-                my $blank =  __build_blank_timesheet(query_config => $query_config,
-                                                     bookingNo => $query_parameters{bookingNo},
-                                                     weekEndDate => $query_parameters{weekEndDate},
-                                                     lastweektimesheet => scalar(@{ $lastweek_timesheet->{data} }) > 0 ? $lastweek_timesheet->{data}
-                                                                                                                       : undef);
+                if  (scalar(@{ $lastweek_timesheet->{data} }) > 0) {
+                    return to_json __build_blank_timesheet(query_config => $query_config,
+                                                            bookingNo => $all_parameters{bookingNo},
+                                                            weekEndDate => $all_parameters{weekEndDate},
+                                                            lastweektimesheet => $lastweek_timesheet->{data});
+                }
+                else {
+                    return to_json  __build_blank_timesheet(query_config => $query_config,
+                                                            bookingNo => $all_parameters{bookingNo},
+                                                             weekEndDate => $all_parameters{weekEndDate});
+                }
             }
             else {
                 debug "Returning Existing timesheet";
@@ -269,7 +250,52 @@ sub CreateOrAmendTimesheet {
     }
     my $data = $timesheet->{data}->[0];
     my $tp_json_entry = $data->{tp_json_entry};
-    debug to_dumper { tp_json_entry => $tp_json_entry };
+    my $tp_json_entry_saved = $data->{tp_json_entry};
+    debug to_dumper { body_parameters => \%body_parameters,
+                      tp_json_entry => $tp_json_entry };
+
+    if (exists($body_parameters{comment})) {
+        if (exists($tp_json_entry->{comment})) {
+            $tp_json_entry->{comment_history} ||= [];
+            my %oldcomment = ();
+            foreach my $field (qw/comment comment_type comment_by comment_on comment_at/) {
+                $oldcomment{ $field } = $tp_json_entry->{ $field } if $tp_json_entry->{ $field };
+            }
+            push(@{ $tp_json_entry->{comment_history} }, { %oldcomment });
+        }
+        $tp_json_entry->{comment} = $body_parameters{comment};
+        $tp_json_entry->{comment_type} = $body_parameters{comment_type} || 'general';
+        $tp_json_entry->{comment_by} = 'api';
+        $tp_json_entry->{comment_on} = DateTime->today->ymd('-');
+        $tp_json_entry->{comment_at} = DateTime->now->hms(':');
+        debug to_dumper { body_parameters => \%body_parameters };
+    }
+    delete($body_parameters{comment});
+    delete($body_parameters{comment_type});
+    if (exists($body_parameters{not_working}) and $body_parameters{not_working} == 1) {
+        $tp_json_entry->{saved} = [ @{ $tp_json_entry_saved->{days} } ];
+        $body_parameters{tp_not_working} = 1;
+        debug to_dumper { body_parameters => \%body_parameters,
+                        tp_json_entry => $tp_json_entry };
+    }
+    delete($body_parameters{not_working});
+    if (exists($body_parameters{is_submitted}) and $body_parameters{is_submitted} == 1) {
+        $body_parameters{tp_extranet_status} = 'Submitted';
+        debug to_dumper { body_parameters => \%body_parameters,
+                        tp_json_entry => $tp_json_entry };
+    }
+    delete($body_parameters{is_submitted});
+    if (exists($body_parameters{loaded_previous_week}) and $body_parameters{loaded_previous_week} == 1) {
+        $tp_json_entry->{saved} = [ @{ $tp_json_entry_saved->{days} } ];
+        $tp_json_entry->{loaded_previous_week} = 1;
+        debug to_dumper { body_parameters => \%body_parameters,
+                        tp_json_entry => $tp_json_entry };
+    }
+    delete($body_parameters{loaded_previous_week});
+    debug to_dumper { body_parameters => \%body_parameters,
+                    tp_json_entry => $tp_json_entry };
+        
+=pod
 
     if (exists($body_parameters{days_entry})) {
     debug to_dumper { days_entry => $body_parameters{days_entry} };
@@ -305,13 +331,26 @@ sub CreateOrAmendTimesheet {
             }
         }
     }
-    $body_parameters{tp_json_entry} = to_json($tp_json_entry);
-    $body_parameters{tp_timesheet_no} = $route_parameters{timesheetNo};
-    foreach my $field (keys %body_parameters) {
-        delete( $body_parameters{$field}) unless exists $data->{$field};
-    }
 
-    ($sql, $bind) = __get_query_sql('UpdateTimesheet',  query_config => $query_config, body_parameters =>  %body_parameters );
+=cut
+
+    delete($body_parameters{days_entry});
+    debug to_dumper $tp_json_entry;
+    $body_parameters{tp_json_entry} = to_json($tp_json_entry);
+    debug to_dumper $body_parameters{tp_json_entry};
+    $body_parameters{tp_timesheet_no} = $route_parameters{timesheetNo};
+#    foreach my $field (keys %body_parameters) {
+#        delete( $body_parameters{$field}) unless exists $data->{$field};
+#    }
+    
+    $body_parameters{tp_amend_by} = 'api';
+    $body_parameters{tp_amend_at} = DateTime->now->hms(':');
+    $body_parameters{tp_amend_on} = DateTime->now->ymd('-');
+    debug to_dumper { body_parameters => \%body_parameters };
+
+    ($sql, $bind) = __get_query_sql('UpdateTimesheet',  query_config => $query_config, %body_parameters );
+    #return __error(code => HTTP_PRECONDITION_FAILED,
+    #                       msg => "no sql query for UpdateTimesheet\n".Dumper { body => \%body_parameters });
     return  to_json __run_query( query => 'UpdateTimesheet',
                                  sql => $sql,
                                  bind => $bind,
@@ -319,6 +358,7 @@ sub CreateOrAmendTimesheet {
 }
 sub __get_previous_weekdate {
     my ($weekenddate) = @_;
+    debug to_dumper {  weekenddate => $weekenddate };
     $weekenddate =~ m/^(\d{4})-?(\d{2})-?(\d{2})/;
     my ($year, $month, $day) = ($1, $2, $3);
     my %datetime = ( year => $year,
@@ -341,20 +381,29 @@ sub __get_timesheet_for_weekend {
 }
 sub __build_blank_timesheet {
     my (%params) = @_;
+    debug to_dumper { params => \%params };
 
     my $query_config = $params{query_config};
-    my $data;
+    my $data = {};
+    debug to_dumper { data2 => $data };
     my @allowed_rates = ();
-    if (defined($params{lastweektimesheet})) {
-        $data = $params{lastweektimesheet};
-        my $lastweek = from_json( $data->{tp_json_entry} );
-        @allowed_rates = @{ $lastweek->{allowed_rates} };
-        $data->{tp_json_entry_hash}{lastweek} = $lastweek;
+    if (defined($params{lastweektimesheet}) and defined($params{lastweektimesheet}->[0]->{allowed_rates})) {
+        my $d = $params{lastweektimesheet}->[0];
+        debug to_dumper { data => $d };
+
+        my $lastweek = $data->{tp_json_entry};
+        
+        @allowed_rates = @{ $lastweek->{allowed_rates} } if $lastweek->{allowed_rates};
+        $data->{tp_json_entry_hash}{previous_week} = $lastweek;
+        $data->{tp_json_entry_hash}{tp_has_previous_week} = 1;
+        debug to_dumper { data2 => $data };
     }
     else {
+        $data->{tp_json_entry_hash}{tp_has_previous_week} = 0;
         my ($sql, $bind) = __get_query_sql('GetBookingDetails', %params);
         my $booking = __run_query( query => 'GetBookingDetails',
                                    sql => $sql,
+                                   nolimit => 1,   
                                    bind => $bind,
                                         );
         debug to_dumper { booking => $booking };
@@ -364,14 +413,15 @@ sub __build_blank_timesheet {
         }
         my ($sql2m, $qm2, $bind2) =  __get_query_sql('GetRateCodes', %params);
         my $ratecodes = __run_query( query => 'GetRateCodes',
+                                     nolimit => 1,
                                      sql => $sql2m,
                                      bind => $bind2,
                                         );
-        debug to_dumper { ratecodes => $ratecodes };
         my %ratecodes = ();
         foreach my $rc (@{ $ratecodes->{data} }) {
             $ratecodes{$rc->{rc_payrate_no}} = $rc;
         }
+        debug to_dumper { ratecodes => [ sort keys %ratecodes ] };
         my $today = DateTime->today->ymd('-');
         $data = { 
             tp_booking_no => $params{bookingNo},
@@ -392,6 +442,9 @@ sub __build_blank_timesheet {
             tp_process_level => 0,
             tp_payroll_no_V => 0,
             tp_recvd_date => "$today",
+            tp_extranet_status => "",
+            tp_extranet_queried => 0,
+            tp_comment => "",
             tp_serial_code => "",
             tp_source => "",
             tp_surname => "",
@@ -404,6 +457,7 @@ sub __build_blank_timesheet {
             tp_week_date_V => "$params{weekEndDate}",
             tp_xfer_date => "$today",
         };
+        debug to_dumper { data2 => $data };
         debug to_dumper { booking => $booking, data =>  $booking->{'data'} };
         my $dta = $booking->{data}[0]; 
         my %ratedetails = ();
@@ -414,16 +468,27 @@ sub __build_blank_timesheet {
             }
         }
         debug to_dumper { dta => \%ratedetails };
+        debug to_dumper { data2 => $data };
         for my $n (1..8) {
             debug to_dumper { n => $n, rate_no => $dta->{"oa_payrate_no__$n"} };
+            my $rate_no = $dta->{"oa_payrate_no__$n"};
+            debug to_dumper { "ratecode_$rate_no" => $ratecodes{$rate_no} };
             if ($dta->{"oa_payrate_no__${n}"} != 0 and defined($ratecodes{$dta->{"oa_payrate_no__$n"}}->{rc_rate_desc})) {
                 debug to_dumper { n => $n, rate_no => $dta->{"oa_payrate_no__$n"} };
                 my $rd = $ratecodes{$dta->{"oa_payrate_no__$n"}};
+                my $limit = $rd->{rc_payrate_no};
+                $limit ||= 0;
+                if ($limit == 0) {
+                    $limit = choose_one(7,8,9,10,11,12) if $rd->{rc_pay_type} eq 'hours';
+                    $limit = 1 if $rd->{rc_pay_type} eq 'days';
+                }
+
                 debug to_dumper { rd => $rd };
                 my %ar = ( hours => $dta->{"oa_rate_hours__$n"},
                         pay_type => $rd->{rc_pay_type},
                         pay_rate => $dta->{"oa_payrate__$n"},
                         inv_rate => $rd->{rc_inv_rate},
+                        limit => $limit,
                         payrate_no => $dta->{"oa_payrate_no__$n"},
                         rate_desc => $rd->{rc_rate_desc},
                         );
@@ -431,7 +496,9 @@ sub __build_blank_timesheet {
                 push(@allowed_rates, { %ar });
             }
         }
+        debug to_dumper { data2 => $data };
     }
+    debug to_dumper { data2 => $data };
     debug to_dumper { allowed_rates => \@allowed_rates };
     if (scalar(@allowed_rates) < 1) {
         return __error(code => HTTP_EXPECTATION_FAILED,
@@ -443,27 +510,36 @@ sub __build_blank_timesheet {
                        quantity => 0,
                        });
     }
+    debug to_dumper { data2 => $data };
     $data->{tp_json_entry_hash}{ allowed_rates} = \@allowed_rates;
     $data->{tp_json_entry_hash}{days} ||= [];
     $data->{tp_json_entry_hash}{ week_rate_total_days } ||= 0;
     $data->{tp_json_entry_hash}{ week_rate_total_hours } ||= 0;
     $data->{tp_json_entry_hash}{ week_rate_total_units } ||= 0;
+    $data->{tp_json_entry_hash}{ loaded_previous_week } ||= 0;
     
     foreach my $weekdate (__generate_week_of_dates($params{weekEndDate})) {
         push(@{ $data->{tp_json_entry_hash}{days}}, { rates => [ @rates ],
                                                       date => $weekdate });
     }
-    unless (exists($data->{tp_json_entry_hash}{lastweek})) {
-        $data->{tp_json_entry_hash}{lastweek} ||= [];
+    unless (exists($data->{tp_json_entry_hash}{previous_week})) {
+        $data->{tp_json_entry_hash}{previous_week} ||= [];
         foreach my $weekdate (__generate_week_of_dates(__get_previous_weekdate($params{weekEndDate}))) {
-            push(@{ $data->{tp_json_entry_hash}{lastweek}}, { rates => [ @rates ],
+            push(@{ $data->{tp_json_entry_hash}{previous_week}}, { rates => [ @rates ],
                                                         date => $weekdate });
         }
+        $data->{tp_json_entry_hash}{tp_has_previous_week} = 0;
     }
+    else {
+        $data->{tp_json_entry_hash}{tp_has_previous_week} = 1;
+    }
+    $data->{tp_json_entry_hash}{tp_has_previous_week} = 1 if scalar( @{ $data->{tp_json_entry_hash}{previous_week} }) > 0;
     $data->{tp_json_entry} = to_json($data->{tp_json_entry_hash});
     delete($data->{tp_json_entry_hash});
-    my $body_parameters = $data;
-    my ($sql, $bind) =  __get_query_sql('NewTimesheet', query_config => $query_config, $body_parameters);
+    delete $data->{bookingNo} if exists $data->{bookingNo};
+    debug to_dumper { data2 => $data };
+    my ($sql, $bind) =  __get_query_sql('NewTimesheet',
+                                         %{ $data });
     my $newtimesheet = __run_query( query => 'NewTimesheet',
                                     sql => $sql,
                                     nolimit => 1,
@@ -482,12 +558,13 @@ sub __build_blank_timesheet {
                               },
                     );
     ($sql, $bind) =  __get_query_sql('GetTimesheet', query_config => $query_config);
+
     my $status = __run_query( query => 'GetTimesheetById',
                               sql => $sql,
                               bind => $bind,
                               );
     debug to_dumper { status => $status };
-    return to_json $status;
+    return $status;
 }
 sub __generate_week_of_dates {
     my ($weekenddate) = @_;
@@ -513,6 +590,10 @@ sub __generate_week_of_dates {
 sub __error {
     my %params = @_;
     $params{code} ||= 404;
+    debug to_dumper { 
+                      status => $params{code},
+                      error =>  $params{msg},
+                    };
 	return qq!{
 				"status": "$params{code}",
                 "error": "$params{msg}"
@@ -533,7 +614,8 @@ $DB::single = 1;
     my %route_parameters = route_parameters->flatten;
     my %body_parameters = body_parameters->flatten;
     my ($sql, $bind) = __get_query_sql('GetBookings', query_config => $query_config);
-    $result{debug}{GetBookings} = $sql;
+    $result{debug}{GetBookings}{sql} = $sql;
+    $result{debug}{GetBookings}{bind} = $sql;
     my $bookings = __run_query( query => 'GetBookings',
                                 sql => $sql,
                                 fields => [ qw/oa_booking_no oa_date_start oa_date_end/ ],
@@ -546,10 +628,10 @@ $DB::single = 1;
         debug to_dumper { booking => $booking };
         debug "Calling __get_query_sql GetBlankTimesheets";
         ($sql, $bind) = __get_query_sql('GetBlankTimesheets',
-                                        params => { 'timepool.tp_booking_no' =>$booking->{oa_booking_no},
-                                                    },
+                                        bookingNo => $booking->{oa_booking_no},
                                         query_config => $query_config);
-        $result{debug}{GetBlankTimesheets}{$booking->{oa_booking_no}} = $sql;
+        $result{debug}{GetBlankTimesheets}{$booking->{oa_booking_no}}{sql} = $sql;
+        $result{debug}{GetBlankTimesheets}{$booking->{oa_booking_no}}{bind} = $bind;
         my $blank_timesheets = __run_query( query => 'GetBlankTimesheets',
                                             sql => $sql,
                                             nolimit => 1,
@@ -560,15 +642,18 @@ $DB::single = 1;
         $params{bookingNo} = $booking->{oa_booking_no};
 #        $query_modifiers->{where}{bookingNo} = $booking->{oa_booking_no};
         ($sql, $bind) = __get_query_sql( 'GetTimesheetHistory', \%params);
-        $result{debug}{GetTimesheetHistory}{$booking->{oa_booking_no}} = $sql;
+        $result{debug}{GetTimesheetHistory}{$booking->{oa_booking_no}}{sql} = $sql;
+        $result{debug}{GetTimesheetHistory}{$booking->{oa_booking_no}}{bind} = $bind;
 #        $query_modifiers->{limit} = -1;
 #        $query_modifiers->{search} = 'oa_booking_no='.$booking->{oa_booking_no};
         # TODO add timepool.tp_week_date >= 05-04-2017
         my $existing_timesheets = __run_query( query => 'GetTimesheetHistory',
                                                sql => $sql,
+                                               nolimit => 1,
                                                bind => $bind,
                                             );
 
+        debug to_dumper { existing_timesheets => $existing_timesheets->{data} };
         my %timesheets = map { $_ => undef } @{ __get_fridays($booking->{oa_date_start}) }; # TODO from 05-04-ccyy
         foreach my $ts (@{ $existing_timesheets->{data} }) {
             $timesheets{ $ts->{tp_week_date} }{tp_extranet_status} = $ts->{tp_extranet_status};
@@ -580,6 +665,7 @@ $DB::single = 1;
         }
 
         debug to_dumper { timesheets => \%timesheets };
+        debug to_dumper { booking => $booking };
         foreach my $friday (sort keys %timesheets ) {
             my $status = $timesheets{$friday} // '';
             push(@data, {
@@ -587,8 +673,8 @@ $DB::single = 1;
                     oa_assignment => $booking->{oa_assignment},
                     cu_name => $booking->{cu_name},
                     tp_week_date => $friday,
-                    tp_extranet_status =>$timesheets{$friday}{tp_extranet_status},
-                    tp_extranet_queried =>$timesheets{$friday}{tp_extranet_queried},
+                    tp_extranet_status =>"",
+                    tp_extranet_queried =>0,
                 },
                 ) unless $status =~ /^(Approved|Paid)$/;
         }
@@ -641,112 +727,70 @@ sub GetBookingTimesheets {
 
 sub __get_query_sql {
     my ($query, %params) = @_;
-    debug to_dumper { query => $query, params => \%params } if %params;
+    debug to_dumper { query => $query, params => \%params,  config_queries => \$config_queries} if %params;
     my $sql = undef;
     my @bind = ();
     my $sql_source = $sql_sources->{ $query } || $sql_sources->{ default };
     my $dbh = $database_handles->{ $sql_source };
-<<<<<<< HEAD
     my %query_parameters = query_parameters->flatten;
     my %route_parameters = route_parameters->flatten;
     my %body_parameters = body_parameters->flatten;
-    my %all_params = ( %query_parameters, %route_parameters, %body_parameters );
+    my %all_params = ( %query_parameters, %route_parameters, %body_parameters, %params );
 
     if (exists($config_queries->{$query})) {
         my $query_config = $params{query_config};
         my $qd = $config_queries->{$query};
-
-        my %fields = $qd->{has_fields_selection} ? @{ $qd->{fields} } : ();
-        my %tables = ();
-        my %where = ();
-        if ($qd->{type} eq 'select') {
-            foreach my $table (keys %{ $qd->{table} }) {
-                $tables{$table} = 1;
-                unless ($query_config->{has_fields_selection}) {
-                    foreach my $field (split(/\n/, $qd->{table}->{$table})) {
-                    $fields{"$table.$field"} = 1;
-                    }
-=======
-    my $preprocessed = $queries->{ $sql_source }->{ $query };
-    my %query_modifiers = ( );
-    my $quoted_pars = {};
-    unless (defined $extra_params) {
-        my %query_parameters = query_parameters->flatten;
-        my %route_parameters = route_parameters->flatten;
-        my %body_parameters = body_parameters->flatten;
-        debug to_dumper {preprocessed => $preprocessed, query_parameters => \%query_parameters,body_parameters=> \%body_parameters,route_parameters => \%route_parameters, extra_params => $extra_params   };
-
-        # each() handles multiple values for same key
-        query_parameters->each( sub {
-            my $par = $_[0];
-            my $val = $_[1];
-            debug to_dumper { par => $par,
-                            val => $val };
-
-            if  ($par =~ m/^sort(\w+)/) {
-                my $field = $1;
-                my $direction = $val eq '1' ? 'ASC' : 'DESC';
-                debug "sort by $field in direction $direction";
-                $query_modifiers{orderby} ||= [];
-                push(@{ $query_modifiers{orderby} }, "$field $direction");
-            } elsif ($par =~ m/^like(\w+)/) {
-                my $field = $1;
-                $query_modifiers{where} ||= [];
-                push(@{ $query_modifiers{where} }, qq!$field LIKE '$val'!);
-            } elsif ($par =~ m/^between(\w+)/) {
-                my $field = $1;
-                my @values = split(',', $val);
-                $query_modifiers{between} ||= [];
-                push(@{ $query_modifiers{where} }, qq!$field between '!.join("' AND '", @values)."'");
-            } elsif ($par eq 'select') {
-                my @fields = split(',', $val);
-                $query_modifiers{fields} = \@fields;
-            } elsif ($par =~ m/^(limit|page)/) {
-                $query_modifiers{$par} =  $val;
-
-            } else {
-                $query_modifiers{where} ||= [];
-                if ($val =~ m/,/) {
-                    my @values = map {$dbh->quote($_) } split(',', $val);
-                    push(@{ $query_modifiers{where} }, qq!$par IN !.'('. join(',', @values). ')');
-                }
-                elsif ($val =~ m/^>=/) { # tp_week_date=>=2017-09-21 ->  tp_week_date >= 2017-09-21
-                    $val = substr $val, 2;
-                    push(@{ $query_modifiers{where} }, qq!$par >= !.$dbh->quote($val));
-                }
-                elsif ($val =~ m/^>/) {  # tp_week_date=>2017-09-21  ->  tp_week_date > 2017-09-21
-                    $val = substr $val, 1;
-                    push(@{ $query_modifiers{where} }, qq!$par > !.$dbh->quote($val));
-                }
-                elsif ($val =~ m/^<=/) { # tp_week_date=<=2017-09-21 ->  tp_week_date <= 2017-09-21
-                    $val = substr $val, 2;
-                    push(@{ $query_modifiers{where} }, qq!$par <= !.$dbh->quote($val));
-                }
-                elsif ($val =~ m/</) {   # tp_week_date=<2017-09-21  ->  tp_week_date < 2017-09-21
-                    $val = substr $val, 1;
-                    push(@{ $query_modifiers{where} }, qq!$par < !.$dbh->quote($val));
->>>>>>> 88fa97ff95907b1131bff4d53bb8bc2b8232ef0d
+        if ($qd->{default}) {
+            debug 'Has Default';
+            foreach my $thing (keys %{ $qd->{default} }) {
+                foreach my $default (keys %{ $qd->{default}->{$thing} }) {
+                    $all_params{ "$default" } = $qd->{default}->{$thing}->{$default};
                 }
             }
-            debug to_dumper { query_definition => $qd };
+        }
+    debug to_dumper { query => $query, params => \%all_params } if %params;
+
+
+        if ($qd->{type} eq 'insert') {
+          debug to_dumper {qd => $qd,
+                           insert => \%params };
+          ($sql, @bind) = $sql_abs->insert($qd->{table},
+                                           \%params);
+          debug to_dumper {sql => $sql, bind => \@bind };
+
+        }
+        elsif ($qd->{type} eq 'update') {
+            my %fields = ();
+            my %tables = ();
+            my %where = ();
+            my %to_pass = %params;
+
+            delete $to_pass{query_config};
             if ($qd->{where}) {
                 foreach my $table (keys %{ $qd->{where} }) {
-                    debug to_dumper { where_table => $table, where_def => $qd->{where}->{$table} };
                     if (exists($qd->{where}->{$table}->{required})) {
                         foreach my $field (keys %{ $qd->{where}->{ $table }->{required} }) {
                             my $fd = $qd->{where}->{ $table }->{required}->{$field};
                             if (ref($fd) eq 'HASH') {
                                 foreach my $keyword (keys %{ $fd }) {
                                     if ($keyword eq 'in') {
+                                        $tables{$table} = 1;
                                         $where{"$table.$field"} = { -in => [ split(/\n/,$fd->{$keyword}) ] };
                                     }
                                 }
                             }
                             else {
-                                $where{"$table.$field"} = $fd;
+                                if ($fd =~ m/^params/) {
+                                    $where{"$table.$field"} = $fd;
+                                }
+                                else {
+                                    $where{"$table.$field"} = \"= $fd";
+                                }
+                                $tables{$table} = 1;
                             }
                        } 
                     } 
+                    debug to_dumper {where => \%where };
                     if (exists($qd->{where}->{ $table }->{optional})) {
                         foreach my $optional (keys %{ $qd->{where}->{ $table }->{optional} }) {
                             my $fd = $qd->{where}->{optional}->{ $table }->{$optional};
@@ -756,20 +800,158 @@ sub __get_query_sql {
                                     if (ref($fd) eq 'HASH') {
                                         foreach my $keyword (keys %{ $fd }) {
                                             if ($keyword eq 'in') {
+                                                $tables{$table} = 1;
                                                 $where{"$table.$field"} = { -in => [ split(/\n/,$fd->{$keyword}) ] };
                                             }
                                         }
                                     }
                                     else {
-                                        $where{"$table.$field"} = $fd;
+                                        if ($fd =~ m/^params/) {
+                                            $where{"$table.$field"} = $fd;
+                                        }
+                                        else {
+                                            $where{"$table.$field"} = \"= $fd";
+                                        }
+                                        $tables{$table} = 1;
                                     }
                                 }
                             }
                         }
                     }
+                    debug to_dumper {where => \%where };
                 }
             }
-            my $source;
+            foreach my $par (keys %where ) {
+                my $val = $where{$par};
+                debug to_dumper { par => $par, val => $val };
+                if ($val =~ /^params\.(\w+)/) {
+                    my $param = $1;
+                debug to_dumper { param => $param, val => $val, all_params => \%all_params };
+                    if (exists($all_params{ $val})) {
+                        $where{$par} = $all_params{ $val };
+                    }
+                    if (exists($all_params{ $par})) {
+                        $where{$par} = $all_params{ $par };
+                    }
+                    if (exists($all_params{ $param})) {
+                        $where{$par} = $all_params{ $param };
+                    }
+                }
+                elsif ( $val =~ m/^([^.]+)\.(\w+)/ ) {
+                    my $table = $1;
+                    my $column = $2;
+                    $val =~ m/^([^.]+)\.(\w+)/;
+                    my $table2 = $1;
+                    my $column2 = $2;
+                    
+                }
+            }
+            debug to_dumper {where => \%where };
+            debug to_dumper {qd => $qd,
+                            update => \%to_pass };
+          ($sql, @bind) = $sql_abs->update($qd->{table},
+                                           \%to_pass, \%where);
+          debug to_dumper {sql => $sql, bind => \@bind };
+        }
+        elsif ($qd->{type} eq 'select') {
+            my %fields = ();
+            my %tables = ();
+            my %where = ();
+          debug to_dumper {select => \%params };
+            foreach my $table (keys %{ $qd->{table} }) {
+                $tables{$table} = 1;
+                unless ($query_config->{has_fields_selection}) {
+                    foreach my $field (split(/\n/, $qd->{table}->{$table})) {
+                        $fields{"$table.$field"} = 1;
+                    }
+                }
+            }
+            debug to_dumper { query_definition => $qd };
+            if ($qd->{where}) {
+                foreach my $table (keys %{ $qd->{where} }) {
+                    if (exists($qd->{where}->{$table}->{required})) {
+                        foreach my $field (keys %{ $qd->{where}->{ $table }->{required} }) {
+                            my $fd = $qd->{where}->{ $table }->{required}->{$field};
+                            if (ref($fd) eq 'HASH') {
+                                foreach my $keyword (keys %{ $fd }) {
+                                    if ($keyword eq 'in') {
+                                        $tables{$table} = 1;
+                                        $where{"$table.$field"} = { -in => [ split(/\n/,$fd->{$keyword}) ] };
+                                    }
+                                }
+                            }
+                            else {
+                                if ($fd =~ m/^params/) {
+                                    $where{"$table.$field"} = $fd;
+                                }
+                                else {
+                                    $where{"$table.$field"} = \"= $fd";
+                                }
+                                $tables{$table} = 1;
+                            }
+                       } 
+                    } 
+                    debug to_dumper {where => \%where };
+                    if (exists($qd->{where}->{ $table }->{optional})) {
+                        foreach my $optional (keys %{ $qd->{where}->{ $table }->{optional} }) {
+                            my $fd = $qd->{where}->{optional}->{ $table }->{$optional};
+                            if ($optional =~ m/^params\.(\w+)$/) {
+                                my $field = $1;
+                                if (exists($all_params{ $field })) {
+                                    if (ref($fd) eq 'HASH') {
+                                        foreach my $keyword (keys %{ $fd }) {
+                                            if ($keyword eq 'in') {
+                                                $tables{$table} = 1;
+                                                $where{"$table.$field"} = { -in => [ split(/\n/,$fd->{$keyword}) ] };
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        if ($fd =~ m/^params/) {
+                                            $where{"$table.$field"} = $fd;
+                                        }
+                                        else {
+                                            $where{"$table.$field"} = \"= $fd";
+                                        }
+                                        $tables{$table} = 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    debug to_dumper {where => \%where };
+                }
+            }
+            my $source = [];
+            debug to_dumper {where => \%where };
+            debug to_dumper {params => \%params };
+            debug to_dumper {all_params => \%all_params };
+            foreach my $par (keys %where ) {
+                my $val = $where{$par};
+                debug to_dumper { par => $par, val => $val };
+                if ($val =~ /^params\.(\w+)/) {
+                    my $param = $1;
+                debug to_dumper { param => $param, val => $val, all_params => \%all_params };
+                    if (exists($all_params{ $val})) {
+                        $where{$par} = $all_params{ $val };
+                    }
+                    if (exists($all_params{ $par})) {
+                        $where{$par} = $all_params{ $par };
+                    }
+                    if (exists($all_params{ $param})) {
+                        $where{$par} = $all_params{ $param };
+                    }
+                }
+                elsif ( $val =~ m/^([^.]+)\.(\w+)/ ) {
+                    my $table = $1;
+                    my $column = $2;
+                    $val =~ m/^([^.]+)\.(\w+)/;
+                    my $table2 = $1;
+                    my $column2 = $2;
+                    
+                }
+            }
+            debug to_dumper {where => \%where };
             if (scalar(keys( %tables)) > 1) {
                 $source = [ keys %tables ];
             }
@@ -777,18 +959,25 @@ sub __get_query_sql {
                 $source = (keys( %tables ))[0];
 
             }
-          if (exists($params{params})) {
-            foreach my $par (keys %{ $params{params} }) {
-                $query_config->{where}{$par} = $params{params}{$par};
-            }
-        }
-          ($sql, @bind) = $sql_abs->select($source, [ keys %fields ], $query_config->{where}, $query_config->{order});
-          debug to_dumper { statement => $sql, bind => \@bind, fields => \%fields, query_config => $query_config };
+            debug to_dumper { where => \%where };
+            $query_config->{where} = \%where;
+#          ($sql, @bind) = $sql_abs->select(-from => $source,
+#                                           -columns => [ keys %fields ],
+#                                           -where => $query_config->{where},
+#                                           -order => $query_config->{order}
+#          [ keys %fields ], $query_config->{where}, $query_config->{order});
+
+          ($sql, @bind) = $sql_abs->select($source, 
+                                           [ keys %fields ],
+                                           $query_config->{where},
+                                           $query_config->{order});
+          debug to_dumper { statement => $sql, where => $query_config->{where}, bind => \@bind, fields => \%fields, query_config => $query_config };
         }
     }
     else {
         return __error(code => HTTP_INTERNAL_SERVER_ERROR, msg => "Unknown query $query");
     }
+    debug to_dumper { query => $query, sql => $sql, bind => \@bind };
     return ($sql, \@bind);
 }
 sub process_query {
@@ -797,11 +986,10 @@ sub process_query {
     debug "In process_query";
 #    my %query_modifiers = ();
     my $query = $passed[0]{ operationId };
-    my $sql_source = $sql_sources->{ $query } || $sql_sources->{ default };
-    my $dbh = $database_handles->{ $sql_source };
     my $query_config = process_query_parameters();
 
-    unless (exists( $queries->{ $sql_source }->{ $query })) {
+#    unless (exists( $queries->{ $sql_source }->{ $query })) {
+    unless (exists($config_queries->{$query})) {
         if (exists( $methods->{$query} )) {
             my $sub = TalApi->can( $query );
             debug "Calling Sub $query";
@@ -816,8 +1004,12 @@ sub process_query {
     }
     debug "Running query $query";
     my ($sql, $bind ) = __get_query_sql($query, query_config => $query_config );
-    debug to_dumper { query => $query, sql => $sql, bind => $bind,  };
+    my $database = $config_queries->{$query}->{database};
+    debug to_dumper { database => $database, config_queries => $config_queries->{$query}, query => $query, sql => $sql, bind => $bind,  };
+    $database ||= 'mysql';
     return to_json __run_query( query => $query,
+                                config => $config_queries->{$query},
+                                database => $database,
                                 sql => $sql,
                                 bind => $bind,
                                 );
@@ -869,10 +1061,14 @@ sub __run_query {
     my %params = @_;
     $params{bind} ||= ();
     debug to_dumper { __run_query => \%params };
+    $params{config} ||= $config_queries->{ $params{query}};
+    $params{database} ||= 'mysql';
     my $calc_rows_sql = $params{sql};
     $calc_rows_sql =~ s/select\s+/select SQL_CALC_FOUND_ROWS /mi;
     my $ret;
     my $sth;
+    $params{limit} = -1 if $params{nolimit};
+
     my $limit = $params{limit} || 5;
     my $page = $params{page} || 1;
     my $pages = 1;
@@ -880,11 +1076,12 @@ sub __run_query {
     my $row_count;
     if ($calc_rows_sql ne $params{sql}) {
         debug to_dumper { sql => $params{sql},
-                        calc_rows_sql => $calc_rows_sql };
-        my $sth1 = $database_handles->{ mysql }->prepare($calc_rows_sql) or return __error(code => HTTP_INTERNAL_SERVER_ERROR, 
+                          calc_rows_sql => $calc_rows_sql,
+                          database => $params{database}};
+        my $sth1 = $database_handles->{ $params{database} }->prepare($calc_rows_sql) or return __error(code => HTTP_INTERNAL_SERVER_ERROR, 
                                                                                            msg => $DBI::errstr);
-#        $sth1->execute(@{ $params{bind} }) or return __error(code => HTTP_INTERNAL_SERVER_ERROR, msg => $DBI::errstr);
-        $row_count = $database_handles->{ mysql }->selectrow_array('SELECT FOUND_ROWS()');
+        $sth1->execute(@{ $params{bind} }) or return __error(code => HTTP_INTERNAL_SERVER_ERROR, msg => $DBI::errstr);
+        $row_count = $database_handles->{ $params{database} }->selectrow_array('SELECT FOUND_ROWS()');
 
 #        $limit = $params{query_modifiers}{limit} || 5;
 #        $page = $params{query_modifiers}{page} || 1;
@@ -897,22 +1094,23 @@ sub __run_query {
             $params{sql} .= " $limit_clause";
         }
         debug to_dumper { sql => $params{sql}, bind => $params{bind} };
-        $sth = $database_handles->{ mysql }->prepare($params{sql} );
+        $sth = $database_handles->{ $params{database} }->prepare($params{sql} );
         $ret = $sth->execute(@{ $params{bind} }) or return __error(code => HTTP_INTERNAL_SERVER_ERROR, msg => $DBI::errstr);
         $pages = int($sth->rows / $limit);
     }
     else {
         debug to_dumper { sql => $params{sql}, bind => $params{bind} };
-        $sth = $database_handles->{ mysql }->prepare($params{sql} );
+        $sth = $database_handles->{ $params{database} }->prepare($params{sql} );
         $ret = $sth->execute(@{ $params{bind} })  or return __error(code => HTTP_INTERNAL_SERVER_ERROR, msg => $DBI::errstr);
         $row_count = 1;
         $last_row = $ret;
     }
     debug to_dumper { sql => $params{sql},
+                       bind => $params{bind},
                     rows => $row_count };
 
     my %result = (
-                    debug => { sql => { $params{query} => { sql => $params{sql}, bind => $params{bind} } } },
+                    debug => { $params{database} => { $params{query} => { sql => $params{sql}, bind => $params{bind} } } },
                     pagination => { total => $row_count },
                     status => defined $ret ? 0 : $sth->errstr,
                     data => [],
@@ -924,6 +1122,40 @@ sub __run_query {
 
     if ($sth->{NUM_OF_FIELDS} > 0 ) { # this is a select statement
         while (my $row = $sth->fetchrow_hashref) {
+            if (exists($params{config}{fromperl})) {
+                my $type = ref($params{config}{fromperl});
+                debug to_dumper  { fromperl => $params{config}{fromperl},
+                                    type => $type };
+                my $data;
+                if ($type eq 'ARRAY') {
+                    debug "An Array";
+                    foreach my $fieldtoconvert (@{ $params{config}{fromperl} }) {
+                        if (ref($fieldtoconvert) eq 'HASH') {
+                            my @fields = values %{ $fieldtoconvert };
+                            my $value = $row->{ $fields[0] };
+                debug to_dumper  { value => $value };
+                            eval $value;
+                debug to_dumper  { data => $data };
+                        }
+                        else {
+                    debug "Not A Hash";
+                            
+                        }
+                    }
+                }
+                elsif ($type eq 'HASH') {
+                    debug "A Hash";
+                    my @fields = values %{ $params{config}{fromperl} };
+        debug to_dumper  { fields => \@fields };
+                    my $value = $row->{ $fields[0] };
+        debug to_dumper  { value => $value };
+                    eval $value;
+                    
+                }
+                else {
+                    debug "Neither and ARERAY nor a Hash - <$type>";
+                }
+            }
             if (exists($row->{tp_json_entry})) {
                 my $decoded = from_json($row->{tp_json_entry});
                 $row->{tp_json_entry} = $decoded;
@@ -1078,4 +1310,9 @@ sub GetMotd {
                "message": "The System will be unavailable for 1 hour from midnight on 11/10/2017 for essential maintenance"
              }!;
 };
+sub choose_one {
+    my @choices = @_;
+    my $no = scalar(@choices);
+    return $choices[ int(rand($no)) ];
+}
 true;

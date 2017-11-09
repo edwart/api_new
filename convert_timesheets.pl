@@ -14,7 +14,8 @@ use SQL::Abstract;
 use Data::Rand;
 use DBI;
 our $json_obj = JSON::DWIW->new;
-my $database = 'Talisman_APITest4';
+#my $database = 'Talisman_APITest4';
+my $database = 'export2';
 my $hostname = 'localhost';
 my $port = 3306;
 my $user = 'root';
@@ -24,7 +25,7 @@ my $dbh = DBI->connect($dsn, $user, $password, { RaiseError => 1, AutoCommit => 
 our %columns = ();
 our  %tables = ();
 our %bookings = ();
-$dbh->do("delete from timepool");
+$dbh->do(qq!delete from timepool!);
 my $sth_book = $dbh->prepare("SELECT * from bookings
                               LEFT JOIN xbookings ON bookings.oa_booking_no = xbookings.xoa_booking_no
                               LEFT JOIN slclient  ON bookings.oa_cust_code = slclient.cu_cust_code") or die $DBI::errstr;
@@ -57,6 +58,7 @@ my %ratecodes = ();
 while (my $row = $sth_ratecodes->fetchrow_hashref) {
     $ratecodes{ $row->{rc_payrate_no} } = { %{ $row } };
 }
+say Dumper { ratecodes => [ sort keys %ratecodes ] };
 my $sql = SQL::Abstract->new;
 my $sth = $dbh->prepare('select * from timecard order by tc_booking_no, tc_workwkend asc') or die $DBI::errstr;
 $sth->execute;
@@ -68,7 +70,7 @@ my $last_workwkend = undef;
 my $last_workweek = undef;
 my $last_tp_json_entry = undef;
 while ( my $timecard = $sth->fetchrow_hashref ) {
-
+    say Dumper { timecard => $timecard };
 
     if (defined($lastrecord)) {
         $timecard->{tc_workweek}++;
@@ -94,6 +96,9 @@ while ( my $timecard = $sth->fetchrow_hashref ) {
         tp_branch => $timecard->{tc_oa_branch},
         tp_source => "timecard",
         tp_extranet_status => "Entered",
+        tp_extranet_queried => 0,
+        tp_extranet_query_type => "",
+        tp_extranet_query_reason => "",
         tp_week_no_V => $timecard->{tc_workweek},
         tp_error => "none",
         tp_client_code => "unknown",
@@ -116,10 +121,57 @@ while ( my $timecard = $sth->fetchrow_hashref ) {
         tp_booking_no_V => $timecard->{tc_booking_no},
         tp_week_no => $timecard->{tc_workweek},
     );
+    my @allowed_rates = (
+          {
+            "hours" =>  "0",
+            "pay_rate" =>  "0",
+            "rate_desc" =>  "Daily Rate",
+            "inv_rate" =>  "0",
+            "payrate_no" =>  "27",
+            "pay_type" =>  "days",
+            "pay_amount" =>  "1",
+            "limit" =>  "7"
+          },
+          {
+            "hours" =>  "0",
+            "pay_rate" =>  "0",
+            "rate_desc" =>  "Standard",
+            "inv_rate" =>  "0",
+            "payrate_no" =>  "1",
+            "pay_type" =>  "hours",
+            "pay_amount" =>  "1",
+            "limit" =>  "40"
+          },
+          {
+            "hours" =>  "0",
+            "pay_rate" =>  "0",
+            "rate_desc" =>  "Evening",
+            "inv_rate" =>  "0",
+            "payrate_no" =>  "12",
+            "pay_type" =>  "hours",
+            "pay_amount" =>  "1",
+            "limit" =>  "20"
+          },
+          {
+            "hours" =>  "0",
+            "pay_rate" =>  "0",
+            "rate_desc" =>  "Standby",
+            "inv_rate" =>  "0",
+            "payrate_no" =>  "130",
+            "pay_type" =>  "units",
+            "pay_amount" =>  "1",
+            "limit" =>  "5"
+          }
+        );
+    my $tp_json_entry = get_json_entry( allowed_rates => \@allowed_rates, timecard => $timecard);
+    print Dumper { tp_json_entry => $tp_json_entry };
+
+=pod
     my $tp_json_entry = { 
                           week_rate_total_hours => $timecard->{tc_hour_total},
                           week_rate_total_units => 0,
                           week_rate_total_days => 0,
+                          loaded_previous_week => 0,
                           status_history => {
                                                 entered => { amended_by => $timecard->{tc_entered_by},
                                                              amended_on => $timecard->{tc_enter_date} }
@@ -129,17 +181,17 @@ while ( my $timecard = $sth->fetchrow_hashref ) {
 
     if (defined($lastrecord)) {
 #        if (($timecard->{tc_workweek} - $lastrecord->{tc_workweek}) == 1) {
-            $tp_json_entry->{has_lastweek} = 1;
-            say Dumper { lastweek => $lastrecord };
-            $tp_json_entry->{lastweek} = $lastrecord->{tp_json_entry}->{days};
+            $tp_json_entry->{has_previous_week} = 1;
+            say Dumper { previous_week => $lastrecord };
+            $tp_json_entry->{previous_week} = $lastrecord->{tp_json_entry}->{days};
         #}
         #else {
             #$tp_json_entry->{has_lastweek} = 0;
         #}
     }
     else {
-        $tp_json_entry->{has_lastweek} = 0;
-        $tp_json_entry->{lastweek} = {};
+        $tp_json_entry->{has_previous_week} = 0;
+        $tp_json_entry->{previous_week} = {};
     }
 
 
@@ -147,16 +199,27 @@ while ( my $timecard = $sth->fetchrow_hashref ) {
     my %booking_ratecodes = ();
     for (my $rcno = 1; $rcno<9; $rcno++) {
         if (defined($booking->{"oa_payrate_no__${rcno}"}) and $booking->{"oa_payrate_no__${rcno}"} > 0) {
+            my $rate_no = $booking->{"oa_payrate_no__${rcno}"};
+            unless (defined($ratecodes{$rate_no})) {
+                die "Ratecode $rate_no is not defined in the ratecodes table". Dumper { ratecodes => \%ratecodes };
+            }
             $booking_ratecodes{ $booking->{"oa_payrate_no__${rcno}"} } = $booking->{"oa_rate_hours__${rcno}"};
         }
     }
-    say Dumper { booking_rates_codes => \%booking_ratecodes };
-    my @allowed_rates = ();
+
+
+#    say Dumper { booking_rates_codes => \%booking_ratecodes };
+
     for (my $rcno = 1; $rcno<9; $rcno++) {
         if ($timecard->{"tc_rate_code__${rcno}"} != 0) {
             my $ratecode = $ratecodes{ $timecard->{"tc_rate_code__${rcno}"} };
-            next if $ratecode->{rc_hrs_day} = 0;
+#            if ($ratecode->{rc_hrs_day} == 0) {
+#                say "Ratecode hrs = 0!";
+#            }
+            say Dumper { rc => $ratecode, booking_ratecodes => \%booking_ratecodes };
             my $limit = $booking_ratecodes{ $ratecode->{rc_payrate_no} };
+            say Dumper { limit => $limit };
+            $limit ||= 0;
             if ($limit == 0) {
                 $limit = choose_one(7,8,9,10,11,12) if $ratecode->{rc_pay_type} eq 'hours';
                 $limit = 1 if $ratecode->{rc_pay_type} eq 'days';
@@ -169,12 +232,15 @@ while ( my $timecard = $sth->fetchrow_hashref ) {
                         pay_rate => $ratecode->{rc_pay_rate},
                         inv_rate => $ratecode->{rc_inv_rate},
                         rate_desc => $ratecode->{rc_rate_desc},
+                        pay_amount => $ratecode->{rc_pay_type} == 
+                        invoice_amount =>
                         );
             push(@allowed_rates, { %ar });
         }
     }
-    next if scalar(@allowed_rates) < 1;
-    say Dumper { allowed => \@allowed_rates };
+=cut
+
+                    
     $tp_json_entry->{allowed_rates} = [ @allowed_rates ];
     my $tc_workwkend = $timecard->{tc_workwkend};
 #    say Dumper { tc_workwkend => $tc_workwkend };
@@ -229,10 +295,11 @@ while ( my $timecard = $sth->fetchrow_hashref ) {
 }
 $sth->finish;
 
+=pod
+
 $sth = $dbh->prepare('select * from timehist') or die $DBI::errstr;
 $sth->execute;
 
-=pod
 
 while ( my $timehist = $sth->fetchrow_hashref ) {
 
@@ -287,7 +354,7 @@ while ( my $timehist = $sth->fetchrow_hashref ) {
             $booking_ratecodes{ $booking->{"oa_payrate_no__${rcno}"} } = $booking->{"oa_rate_hours__${rcno}"};
         }
     }
-    say Dumper { booking_rates_codes => \%booking_ratecodes };
+#    say Dumper { booking_rates_codes => \%booking_ratecodes };
     my @allowed_rates = ();
     for (my $rcno = 1; $rcno<9; $rcno++) {
         if ($timehist->{"th_rate_code__${rcno}"} != 0) {
@@ -359,7 +426,6 @@ while ( my $timehist = $sth->fetchrow_hashref ) {
     $record{tp_type} ||= "unknown";
     $record{tp_type_V} ||= "unknown";
     my($stmt, @bind) = $sql->insert('timepool',\%record );
-    say Dumper { statement => $stmt, bind => \@bind };
     insert_row($stmt, \@bind) or die $! ;
    
 }
@@ -367,11 +433,84 @@ $sth->finish;
 #my($stmt, @bind) = $sql->insert('timepool',\@fields );
 #say Dumper $stmt;
 
-=cut
+=cut 
 
+sub get_json_entry {
+    my %params = @_;
+    my $timecard = $params{timecard};
+    my @allowed_rates = @{ $params{allowed_rates} };
+    my $tc_workwkend = $timecard->{tc_workwkend};
+    $timecard->{tc_workwkend} =~ m/^(\d{4})-(\d{2})-(\d{2})/;
+    my ($year, $month, $day) = ($1, $2, $3);
+    my $weekend = DateTime->new(year => $year, month => $month, day => $day);
+    my $previousweekend = $weekend->subtract(days => 7);
+    my $we2 = DateTime->new(year => $year, month => $month, day => $day);
+    my $weekstart = $we2->subtract(days => 6);
+    my $previousweekstart = $we2->subtract(days => 13);
+    my $daysofweek = get_dates($weekstart, $weekend);
+    my $previousdaysofweek = get_dates($previousweekstart, $weekend);
+    my $tp_json_entry = { 
+                          week_rate_total_hours => $timecard->{tc_hour_total},
+                          week_rate_total_units => 0,
+                          week_rate_total_days => 0,
+                          loaded_previous_week => 0,
+                          status_history => {
+                                                entered => { amended_by => $timecard->{tc_entered_by},
+                                                             amended_on => $timecard->{tc_enter_date} }
+                                            },
+                        };
+    my $week_rate_total_days = 0;
+    my @days = ();
+    my @previousdays = ();
+    my %totals = (hours => 0,
+                  days => 0,
+                  units => 0);
+    my %prevtotals = (hours => 0,
+                  days => 0,
+                  units => 0);
+    for (my $dow=0; $dow<7; $dow++) {
+        my %day = ( date => $daysofweek->[$dow] );
+        my %previousday = ( date => $previousdaysofweek->[$dow] );
+        my @rates = ();
+        my @previousrates = ();
+        my $choice = int(rand(scalar(@allowed_rates)));
+        say Dumper { choice => $choice };
+        for (my $arno = 0; $arno< scalar(@allowed_rates); $arno++) {
+            my $qty = 0;
+            my $prevqty = 0;
+            my $pay_type = $allowed_rates[$arno]->{pay_type};
+            if ($arno == $choice) {
+                my $limit = $allowed_rates[$arno]->{limit};
+                $qty =  int(rand($limit));
+                $prevqty =  int(rand($limit));
+                
+            }
+            $totals{ $pay_type} += $qty;
+            $prevtotals{ $pay_type} += $prevqty;
+
+
+            push(@rates, { code => $allowed_rates[$arno]->{payrate_no},
+                            quantity => $qty });
+            push(@previousrates, { code => $allowed_rates[$arno]->{payrate_no},
+                            quantity => $prevqty });
+        }
+        $day{ rates} = [ @rates ];
+        $previousday{ rates} = [ @previousrates ];
+        push(@days, { %day });
+        push(@previousdays, { %previousday });
+    }
+    $tp_json_entry->{week_rate_total_hours} = $totals{hours};
+    $tp_json_entry->{week_rate_total_units} = $totals{units};
+    $tp_json_entry->{week_rate_total_days} = $totals{days};
+    $tp_json_entry->{days} = [ @days ];
+    $tp_json_entry->{previousweek} = [ @previousdays ];
+    print Dumper { tp_json_entry => $tp_json_entry };
+    return $tp_json_entry;
+}
 sub insert_row {
     my ($sql, $bind, $sth) = @_;
     $sth ||= $dbh->prepare($sql) or die $DBI::errstr;
+    say Dumper { statement => $sql, bind => $bind };
     $sth->execute(@{ $bind }) or die $DBI::errstr;
 
 }

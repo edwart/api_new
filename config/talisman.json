@@ -253,19 +253,57 @@
         }
       }
     },
-    "/timesheet/{bookingNo}/{weekendDate}": {
+    "/timesheet/{bookingNo}/{weekEndDate}": {
       "get": {
         "tags": [
           "timesheetbybooking"
         ],
         "summary": "Get a timesheets for a given booking and weekend date",
-        "operationId": "GetTimesheet",
+        "operationId": "GetTimesheet_sub",
         "parameters": [
           {
             "$ref": "#/parameters/bookingNo",
             "$ref": "#/parameters/weekEndDate"
           }
         ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "tags": [
+          "getuserdetails"
+        ],
+        "summary": "Get User Details",
+        "operationId": "GetUserDetails",
+        "responses": {
+          "200": {
+            "description": "successful response"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "updateuserdetails"
+        ],
+        "summary": "Update User Details",
+        "operationId": "UpdateUserDetails",
         "responses": {
           "200": {
             "description": "successful response"

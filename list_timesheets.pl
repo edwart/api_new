@@ -7,7 +7,7 @@ $Data::Dumper::Sortkeys = 1;
 use JSON::DWIW;
 use DBI;
 our $json_obj = JSON::DWIW->new;
-my $database = 'Talisman_APITest4';
+my $database = 'export2';
 my $hostname = 'localhost';
 my $port = 3306;
 my $user = 'root';

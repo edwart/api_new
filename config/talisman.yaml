@@ -1,0 +1,371 @@
+---
+basePath: /api/v8
+consumes:
+  - application/json
+definitions:
+  errorModel:
+    properties:
+      message:
+        type: string
+      status:
+        format: int32
+        type: integer
+    required:
+      - status
+      - message
+    type: object
+  job:
+    description: Talisman job record
+    properties:
+      external_job_id:
+        type: string
+      jb_address__1:
+        type: string
+      jb_address__2:
+        type: string
+      jb_address__3:
+        type: string
+      jb_address__4:
+        type: string
+      jb_address__5:
+        type: string
+      jb_branch:
+        type: string
+      jb_client_code:
+        type: string
+      jb_consultant:
+        type: string
+      jb_cont_code:
+        type: string
+      jb_date:
+        format: date
+        type: string
+      jb_date_active:
+        format: date
+        type: string
+      jb_date_closed:
+        format: date
+        type: string
+      jb_date_expiry:
+        format: date
+        type: string
+      jb_end_date:
+        format: date
+        type: string
+      jb_job_desc:
+        type: string
+      jb_job_desc_full:
+        type: string
+      jb_job_no:
+        $ref: '#/definitions/jobNo'
+      jb_job_status:
+        type: string
+      jb_postcode:
+        type: string
+      jb_raised_date:
+        format: date
+        type: string
+      jb_start_date:
+        format: date
+        type: string
+    type: object
+  jobNo:
+    description: job number
+    format: int64
+    type: integer
+  ratecode:
+    description: Talisman ratecodes record
+    properties:
+      rc_pay_tax:
+        description: 'pay tax '
+        type: string
+      rc_pay_type:
+        description: 'pay type '
+        type: string
+      rc_payrate_no:
+        description: 'payrate number '
+        format: int32
+        type: integer
+    type: object
+  tableopts:
+    properties:
+      limit:
+        format: int32
+        type: integer
+      page:
+        format: int32
+        type: integer
+      select:
+        format: int32
+        type: string
+    type: object
+host: earth.beacon.co.uk
+info:
+  contact:
+    name: info@talisman-recruitment.com
+  description: "API for accessing Beacon Talisman recruitment software.\n"
+  license:
+    name: 'Proprietary. All rights reserved. Copyright (c) Beacon Computers, Dunstable, UK, 2016.'
+    url: http://talisman-recruitment.com/terms/
+  termsOfService: http://talisman-recruitment.com/terms/
+  title: Beacon Talisman REST API
+  version: 0.0.8
+parameters:
+  availableFromDate:
+    description: available from date
+    format: date
+    in: path
+    name: availableFromDate
+    required: 1
+    type: string
+  bookingNo:
+    description: Booking number
+    in: path
+    name: bookingNo
+    required: 1
+    type: integer
+  candEmail:
+    description: candidate email
+    in: path
+    name: candEmail
+    pattern: '/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i'
+    required: 1
+    type: string
+  candNo:
+    description: Candidate number
+    in: path
+    name: candNo
+    required: 1
+    type: integer
+  jobNo:
+    description: job number
+    in: path
+    name: jobNo
+    required: 1
+    type: integer
+  timesheetdetailjson:
+    description: JSON Structure of timesheet
+    in: path
+    name: timesheetdetailjson
+    required: 1
+    type: string
+  userId:
+    description: KeyApps user_id
+    in: path
+    name: userId
+    required: 1
+    type: string
+  weekEndDate:
+    description: Work Week End Date
+    format: date
+    in: path
+    name: weekEndDate
+    required: 1
+    type: string
+paths:
+  /:
+    get:
+      description: Get Talisman API version information
+      operationId: GetApiVersionInfo
+      responses:
+        200:
+          description: Successful response
+          schema:
+            properties:
+              api_version:
+                type: integer
+              version:
+                type: string
+      summary: Get Talisman API version information
+  /bookings:
+    get:
+      operationId: GetBookings
+      responses:
+        200:
+          description: successful response
+          schema:
+            items:
+              $ref: '#/definitions/jobNo'
+            type: array
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Returns bookings
+      tags:
+        - booking
+  /candidates:
+    get:
+      description: 'Returns an array of candidates '
+      operationId: ListCandidates
+      responses:
+        200:
+          description: successful response
+          schema:
+            items:
+              $ref: '#/definitions/jobNo'
+            type: array
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: List Talisman candidates
+      tags:
+        - candidates
+  '/loadlasttimesheet/{timesheetNo}':
+    post:
+      operationId: LoadLastWeekTimesheet
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Load Last weeks Timesheet
+      tags:
+        - loadlastweektimesheet
+  /misc/motd:
+    get:
+      operationId: GetMotd
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Return Message of the Day
+      tags:
+        - motd
+  /rates:
+    get:
+      description: Returns an array of rate codes
+      operationId: GetRateCodes
+      responses:
+        200:
+          description: successful response
+          schema:
+            items:
+              $ref: '#/definitions/jobNo'
+            type: array
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: 'List Talisman rate codes '
+      tags:
+        - ratecode
+  /timesheet:
+    get:
+      operationId: GetTimesheet_sub
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Get or Create a blank Timesheet
+      tags:
+        - gettimesheet
+  '/timesheet/{bookingNo}/{weekEndDate}':
+    get:
+      operationId: GetTimesheet_sub
+      parameters:
+        - $ref: '#/parameters/weekEndDate'
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Get a timesheets for a given booking and weekend date
+      tags:
+        - timesheetbybooking
+  '/timesheet/{timesheetNo}':
+    post:
+      operationId: CreateOrAmendTimesheet
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Create or Amend a Timesheet
+      tags:
+        - createoramendtimesheet
+  /timesheets:
+    get:
+      operationId: GetPendingTimesheets
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Get Pending Timesheets for a candidate
+      tags:
+        - timesheetspending
+  /timesheets/history:
+    get:
+      operationId: GetTimesheetHistory
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Get Timesheet history for a candidate
+      tags:
+        - timesheethistory
+  '/timesheets/{bookingNo}':
+    get:
+      operationId: GetBookingTimesheets
+      parameters:
+        - $ref: '#/parameters/bookingNo'
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Get all timesheets for a given booking
+      tags:
+        - bookingimesheets
+  /user:
+    get:
+      operationId: GetUserDetails
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Get User Details
+      tags:
+        - getuserdetails
+    post:
+      operationId: UpdateUserDetails
+      responses:
+        200:
+          description: successful response
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/errorModel'
+      summary: Update User Details
+      tags:
+        - updateuserdetails
+produces:
+  - application/json
+schemes:
+  - http
+  - https
+swagger: 2.0

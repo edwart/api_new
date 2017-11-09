@@ -25,12 +25,28 @@ startup_info: 1
 #    logger:
 #        log4perl:
 #            config_file: "log4perl.conf"
+#            database: 'Talisman_APITest4'
 plugins:
    Database:
       connections:
          mysql:
             driver: 'mysql'
-            database: 'Talisman_APITest4'
+            database: 'export2'
+            host: 'localhost'
+            port: 3306
+            username: 'root'
+            password: 'gemini2'
+            # connection_check_threshold: 10
+            dbi_params:
+                RaiseError: 1
+                ShowErrorStatement: 1
+                AutoCommit: 1
+                mysql_auto_reconnect: 1
+            on_connect_do: ["SET NAMES 'utf8'", "SET CHARACTER SET 'utf8'", "SET SQL_MODE='TRADITIONAL'" ]
+            log_queries: 1
+         system:
+            driver: 'mysql'
+            database: 'Talisman_System4'
             host: 'localhost'
             port: 3306
             username: 'root'

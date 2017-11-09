@@ -1,0 +1,33 @@
+<% USE Dumper -%>
+<% USE date(format = '%d-%b-%Y') -%>
+<!--
+<% Dumper.dump(request) %>
+-->
+<% FOREACH ts IN data.data -%>
+    <% path = request.env.REQUEST_URI | replace('/pdf/timesheet/\d*','') %>
+    <img src="http://<% request.env.HTTP_X_FORWARDED_SERVER %><% path %>/images/Talisman.png">
+    <h2><% ts.cu_name %></h2>
+    <h3>#<% ts.tp_booking_no %>/<% ts.oa_assignment %>/<% ts.cand_forename %> <% ts.cand_surname %>/<% ts.tp_week_date %></h3>
+    <table width="100%">
+    <tr>
+    <td>&nbsp;</td>
+    <% FOREACH day IN ts.tp_json_entry.days -%>
+        <%- thisdate = day.date _ ' ' _ '12:00:00' -%>
+        <td>
+        <% date.format(thisdate, '%a') %><br><% date.format(thisdate) %></td>
+    <% END -%>
+    </tr>
+    <% FOREACH rate IN ts.tp_json_entry.allowed_rates -%>
+    <tr>
+        <th><% rate.rate_desc %></th>
+        <% FOREACH day IN ts.tp_json_entry.days -%>
+            <% FOREACH  dayrate IN day.rates -%>
+                <% IF dayrate.code == rate.payrate_no -%>
+                    <td><% dayrate.quantity %></td>
+                <% END -%>
+            <% END -%>
+        <% END -%>
+        </tr>
+    <% END -%>
+    </table>
+<% END -%>
