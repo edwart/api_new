@@ -5,8 +5,8 @@ use warnings;
 use Dancer2;
 use Dancer2::Plugin::OpenAPI;
 use Dancer2::Plugin::Database;
-use OxdPerlModule;
 use Data::Dumper;
+use MyAPI;
 use HTTP::Status qw(:constants :is status_message);
 use YAML::XS 'LoadFile';
 use JSON::DWIW ();
@@ -16,160 +16,59 @@ use DateTime::Event::Recurrence;
 use FindBin qw/ $Bin /;
 use File::Basename qw/ dirname /;
 use SQL::Library;
-use SQL::Abstract;
 #use SQL::Abstract::More;
 use Template;
-prefix '/api/dev8';
-#
-# set logger => 'null' if $ENV{HARNESS_ACTIVE} && ! $ENV{TEST_VERBOSE};
-set log => 'error' if $ENV{HARNESS_ACTIVE} && ! $ENV{TEST_VERBOSE};
-
-#set serializer => 'Mutable';
-
-my $json_obj            = JSON::DWIW->new({bare_solidus => 1, pretty => 1});
 my $config              = config;
-my $sql_abs             = SQL::Abstract->new();
-my $methods             = __get_list_of_methods();
-my $database_handles    = __get_db_handles();
-my $queries             = __get_queries();
-my $config_queries      = $config->{queries};
-my $sql_sources         = __get_sql_sources();
+my $openapi = $config->{plugins}->{OpenAPI};
+my $namespace = $openapi->{namespace};
+debug to_dumper { namespace => $namespace };
+#prefix $openapi->{prefix} if $openapi->{prefix};
+set serializer $openapi->{serializer} if $openapi->{serializer};
 my $apiconfig           = OpenAPI->get_apiconfig;
-my $tt = new Template(START_TAG => '<%', END_TAG => '%>');
+
 our $VERSION = '0.1';
-#debug to_dumper { config_queries => $config_queries };
+
+sub process_query {
+	my ($params) = @_;	
+	debug to_dumper { params => $params };
+
+	my $config              = config;
+	my $openapi = $config->{plugins}->{OpenAPI};
+	my $namespace = $openapi->{namespace};
+    my %params = params;
+    my $query_parameters = query_parameters->flatten;
+    my $route_parameters = route_parameters->flatten;
+    my $body_parameters = body_parameters->flatten;
+	debug to_dumper { config => $config };
+	my $api = MyAPI->new( apiconfig => $apiconfig,
+                          cfg => $config,
+                          parent_class => 'MyAPI',
+        				  query_parameters => $query_parameters,
+						  route_parameters => $route_parameters,
+						  body_parameters => $body_parameters,
+							);
+	debug to_dumper { api => $api };
+    my $is_query = $api->is_query( $params->{operationId });
+    my $is_method = $api->is_method( $params->{operationId });
+	debug to_dumper { isquery => $is_query, is_method => $is_method };
+#
+#	my $config_queries      = $config->{queries};
+#	my $sql_sources         = $api->__get_sql_sources();
+    if ($api->is_query( $params->{operationId })) {
+       debug "is a query";
+       return $api->run_query($params);
+    }
+    elsif ($api->is_method( $params->{operationId })) {
+       debug "is a method";
+   }
+   else {
+       error "Not sure what $params->{operationId} is";
+   }
+    return to_json { };
+}
 
 =pod
 
-
-get '/interface' => sub {
-
-    template 'interface.tt', { config => $apiconfig };
-};
-
-=cut
-
-get '/img/*' => sub {
-    my ($file) = splat;
- 
-    send_file "/img/$file";
-};
-get '/js/*' => sub {
-    my ($file) = splat;
- 
-    send_file "/js/$file";
-};
-get '/css/*' => sub {
-    my ($file) = splat;
- 
-    send_file "/css/$file";
-};
-get '/images/*' => sub {
-    my ($file) = splat;
- 
-    send_file "/images/$file";
-};
-
-get '/pdf/timesheet/:timesheetid' => sub {
-    debug 'In pdf timesheet';
-    my ($sql, $bind) = __get_query_sql('GetTimesheetById', 'params.timesheetNo' => param('timesheetId') );
-    debug "sql = $sql";
-    my $data = __run_query( query => 'GetTimesheetById',
-                                      sql => $sql,
-                                      bind => $bind,
-                                    );
-    debug to_dumper { data => $data };
-
-   template 'timesheet2.tt', { data => $data };#, { layout => 'bootstrap.tt' };
-
-};
-get '/pdf/timesheet2/:timesheetid' => sub {
-    debug 'In pdf timesheet';
-    my ($sql, $bind) = __get_query_sql('GetTimesheetById', 'params.timesheetNo' => param('timesheetid') );
-    debug "sql = $sql";
-    my $data = __run_query( query => 'GetTimesheetById',
-                                      sql => $sql,
-                                      bind => $bind,
-                                    );
-    debug to_dumper { data => $data };
-
-   template 'timesheet3.tt', { data => $data }, { layout => 'bootstrap.tt' };
-
-};
-get '/createtimesheet/:filename' => sub {
-
-    my %params = params;
-    my %query_parameters = query_parameters->flatten;
-    debug to_dumper {query_parameters => \%query_parameters, params => \%params };
-    debug 'In createtimesheet get';
-
-
-    my $file = route_parameters->get('filename');
-    my ($data, $error_msg) = $json_obj->from_json_file($file);
-    debug to_dumper { data => $data, error => $error_msg };
-    my $jsondata = $data->{tp_json_entry};
-    my $json = $json_obj->to_json($jsondata);
-    $data->{tp_json_entry} = qq!$json!;
-
-#    set serializer => undef;
-
-    debug to_dumper { timesheets => $data };
-    template 'timesheet.tt', { timesheets => $data };
-};
-
-
-sub GetApiVersionInfo {
-    my %params = @_;
-#    debug to_dumper $apiconfig;
-    return to_json $apiconfig->{info};
-}
-sub LoadLastWeekTimesheet {
-    my %params = @_;
-    my $query_config = $params{query_config};
-    debug "In  LoadLastWeekTimesheet ";
-    my %query_parameters = query_parameters->flatten;
-    my %route_parameters = route_parameters->flatten;
-    my %body_parameters = body_parameters->flatten;
-    my $sql;
-    my $bind;
-    debug to_dumper { query_parameters => \%query_parameters,
-                      route_parameters => \%route_parameters,
-                      body_parameters => \%body_parameters };
-    unless (exists($route_parameters{timesheetNo}) or exists($query_parameters{timesheetNo})) {
-        return __error(code => HTTP_PRECONDITION_FAILED,
-                       msg => "Mandatatory parameter timesheetNo missing");
-    }
-    ($sql, $bind) = __get_query_sql('GetTimesheetById', query_config => $query_config);
-    my $timesheet =  __run_query( query => 'GetTimesheetById',
-                                  sql => $sql,
-                                  bind => $bind,
-                                );
-    unless (scalar(@{ $timesheet->{data}}) > 0) {
-        return __error(code => HTTP_PRECONDITION_FAILED,
-                       msg => "timesheet $query_parameters{timesheetNo} does not exist");
-    }
-    my $data = $timesheet->{data}->[0];
-    my $tp_json_entry = $json_obj->from_json($data->{tp_json_entry});
-    unless (exists($tp_json_entry->{previous_week})) {
-        return __error(code => HTTP_PRECONDITION_FAILED,
-                       msg => "No Previous week data to load");
-    }
-    my $tp_json_entry_saved = { %{ $tp_json_entry->{days} } };
-    debug to_dumper { tp_json_entry => $tp_json_entry };
-
-    if (exists($body_parameters{days_entry})) {
-        $tp_json_entry->{changessaved} = $body_parameters{days_entry};
-    }
-    $tp_json_entry->{dayssaved} = $tp_json_entry->{days};
-    $tp_json_entry->{days} = $tp_json_entry->{previous_week};
-
-    ($sql, $bind) = __get_query_sql('UpdateTimesheet', query_config => $query_config, body_parameters => %body_parameters );
-    return  to_json __run_query( query => 'UpdateTimesheet',
-                                 sql => $sql,
-                                 bind => $bind,
-                                );
-    
-}
 sub GetTimesheet_sub {
     my %params = @_;
     my $query_config = $params{query_config};
@@ -295,7 +194,6 @@ sub CreateOrAmendTimesheet {
     debug to_dumper { body_parameters => \%body_parameters,
                     tp_json_entry => $tp_json_entry };
         
-=pod
 
     if (exists($body_parameters{days_entry})) {
     debug to_dumper { days_entry => $body_parameters{days_entry} };
@@ -332,7 +230,6 @@ sub CreateOrAmendTimesheet {
         }
     }
 
-=cut
 
     delete($body_parameters{days_entry});
     debug to_dumper $tp_json_entry;
@@ -980,7 +877,7 @@ sub __get_query_sql {
     debug to_dumper { query => $query, sql => $sql, bind => \@bind };
     return ($sql, \@bind);
 }
-sub process_query {
+sub process_query_old {
     my @passed = @_;
 
     debug "In process_query";
@@ -1014,6 +911,9 @@ sub process_query {
                                 bind => $bind,
                                 );
 }
+
+=pod
+
 sub __get_list_of_methods {
     use Class::Sniff;
     my %methods = ();
@@ -1056,6 +956,7 @@ sub __get_sql_sources {
     my $libs = $config->{plugins}->{OpenAPI}->{SQLLibrary}->{config};
     return YAML::XS::LoadFile( dirname($Bin).'/'. $libs->{datasource} );
 }
+
 
 sub __run_query {
     my %params = @_;
@@ -1315,4 +1216,6 @@ sub choose_one {
     my $no = scalar(@choices);
     return $choices[ int(rand($no)) ];
 }
+=cut
+
 true;

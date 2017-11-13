@@ -75,6 +75,11 @@ basic_auth_pass: test
 
 plugins:
   OpenAPI:
+    namespace: 'TalApi::Obj'
+    prefix: api/dev
+    serialize: JSON
+    debug: |
+        sql
     config: config/talisman.json
     processedby: process_query
     SQLLibrary:
@@ -84,292 +89,291 @@ plugins:
            beacon: sql/bespoke.sql
         mapping: sql/mapping.sql
         datasource: sql/source.yml
-
-queries:
-    GetTimesheetHistory:
-        default:
-            params:
-                candId: 540180
-        type: select
-        database:   mysql
-        table:
-            timepool: |
-                tp_timesheet_no
-                tp_extranet_status
-                tp_week_date, tp_week_no
-                tp_json_entry
-                tp_hours_tot
-                tp_extranet_queried
-                tp_extranet_query_type
-                tp_extranet_query_reason
-                tp_not_working
-                tp_comment
-            bookings: |
-                oa_booking_no
-                oa_assignment
-            slclient: |
-                cu_name
-        where:
-             bookings:
-                required:
-                    oa_cust_code: slclient.cu_cust_code
-                    oa_cand_no: params.candId
-             timepool:
-                required:
-                    tp_booking_no: bookings.oa_booking_no
-                    tp_extranet_status:
-                        in: |
-                            Paid
-                            Submitted
-                            Approved
-                            Entered
-                optional:
-                    tp_booking_no: params.bookingNo
-    ListCandidates:
-        type: select
-        database:   mysql
-        table:
-            cands: "*"
-    ListCustomers:
-        type: select
-        database:   mysql
-        table:
-            slcust: |
-                cu_cust_code
-                cu_name
-    GetCustomer:
-        type: select
-        database:   mysql
-        table:
-            slcust: "*"
-        where:
-            slcust:
-                required:
-                    cu_cust_code: params.cust_code
-    GetOpenJobs:
-        type: select
-        database:   mysql
-        table:
-            job: "*"
-        where:
-            job:
-                required:
-                    jb_job_status: Open
-    GetJobDetails:
-        type: select
-        database:   mysql
-        table:
-            job: "*"
-        where:
-            job:
-                required:
-                    jb_job_no: params.jobNo
-    GetRateCodes:
-        type: select
-        database:   mysql
-        table:
-            ratecode: "*"
-    GetBookingRateCodes:
-        type: select
-        database:   mysql
-        default:
-            params:
-                candId: 540180
-        table:
-            bookings: |
-                oa_booking_no
-                oa_contractcust
-                oa_payrate_no__1
-                oa_payrate_no__2
-                oa_payrate_no__3
-                oa_payrate_no__4
-                oa_payrate_no__5
-                oa_payrate_no__6
-                oa_payrate_no__7
-                oa_payrate_no__8
-        where:
-            bookings:
-                required:
-                    oa_cand_no: params.candId
-    GetBookingDetails:
-        type: select
-        database:   mysql
-        table:
-            bookings: "*"
-        where:
-            bookings:
-                required:
-                    oa_booking_no: params.bookingNo
-    GetBookings:
-        type: select
-        database:   mysql
-        default:
-            params:
-                candId: 540180
-        table:
-            bookings: "*"
-            slclient: cu_name
-        where:
-            bookings:
-                required:
-                    oa_cand_no: params.candId
-            slclient:
-                required:
-                    cu_cust_code: bookings.oa_cust_code
-    GetBookingTimesheets:
-        type: select
-        database:   mysql
-        table:
-            timepool: "*"
-        where:
-            timepool:
-                required:
-                    tp_booking_no: params.bookingNo
-    GetTimesheetById:
-        type: select
-        database:   mysql
-        table:
-            timepool: "*"
-            bookings: oa_assignment
-            slclient: cu_name
-            cands: "*"
-        where:
-            timepool:
-                required:
-                    tp_timesheet_no: params.timesheetNo
-            bookings:
-                required:
-                    oa_booking_no: timepool.tp_booking_no
-            slclient:
-                required:
-                    cu_cust_code: bookings.oa_cust_code
-            cands:
-                required:
-                    cand_cand_no: bookings.oa_cand_no
-    GetTimesheet:        
-        type: select
-        database:   mysql
-        table:
-            timepool: "*"
-            bookings: |
-                oa_rate_hours__1
-                oa_rate_hours__2
-                oa_rate_hours__3
-                oa_rate_hours__4
-                oa_rate_hours__5
-                oa_rate_hours__6
-                oa_rate_hours__7
-                oa_rate_hours__8
-        where:
-            timepool:
-                required:
-                    tp_booking_no: params.bookingNo
-                    tp_week_date: params.weekEndDate
-            bookings:
-                required:
-                    oa_booking_no: timepool.tp_booking_no
-    GetBlankTimesheets:
-        type: select
-        database:   mysql
-        default:
-            params:
-                candId: 540180
-        table:
-            timepool: |
-                tp_timesheet_no
-                tp_week_date
-        where:
-            timepool:
-                required:
-                    tp_booking_no: bookings.oa_booking_no
-            bookings:
-                required:
-                    oa_cand_no: params.candId
-                    oa_booking_no: params.bookingNo
-    GetTimesheetHistory2:
-        default:
-            params:
-                candNo: 540180
-        type: select
-        database:   mysql
-        table:
-            timepool: |
-                tp_timesheet_no
-                tp_extranet_status
-                tp_week_date
-                tp_week_no
-                tp_json_entry
-                tp_hours_tot
-                tp_extranet_queried
-                tp_extranet_query_type
-                tp_extranet_query_reason
-                tp_not_working
-                tp_comment
-            bookings: |
-                oa_booking_no
-                oa_assignment
-            slclient: cu_name
-        where:
-            timepool:
-                required:
-                    tp_booking_no: bookings.oa_booking_no
-            bookings:
-                required:
-                    oa_cand_no: params.candNo
-            slclient:
-                required:
-                    cu_cust_code: oa_cust_code
-    UpdateTimesheet:
-        type: update
-        database:   mysql
-        table: timepool
-        where:
-            timepool:
-                required:
-                    tp_timesheet_no: params.timesheetNo
-    NewTimesheet:
-        type: insert
-        database:   mysql
-        table: timepool
-    GetUserDetails:
-        type: select
-        database:   system
-        default:
-            params:
-                code: GH
-        table: 
-            users: "*"
-            usersettings: "*"
-        fromperl:
-            usersettings: settings
-        where:
-            users:
-                required:
-                    code: params.code
-#                        in: |
-#                            LW
-#                            NG
-#                            SB
-#                            LR
-#                            PJD
-#                            MJ
-#                            PE
-#                            JC
-#                            DD
-#                            SW
-#                            RM
-#                            LH
-#                            JP
-#                            GH
-#                            SF
-#                            JD
-#                            IM
-#                            NJ
-#                            CH
-#                            MOR
-#                            NT
-#                            BH
-            usersettings:
-                required:
-                    login: users.login
+    Queries:
+        GetTimesheetHistory:
+            default:
+                params:
+                    candId: 540180
+            type: select
+            database:   mysql
+            table:
+                timepool: |
+                    tp_timesheet_no
+                    tp_extranet_status
+                    tp_week_date, tp_week_no
+                    tp_json_entry
+                    tp_hours_tot
+                    tp_extranet_queried
+                    tp_extranet_query_type
+                    tp_extranet_query_reason
+                    tp_not_working
+                    tp_comment
+                bookings: |
+                    oa_booking_no
+                    oa_assignment
+                slclient: |
+                    cu_name
+            where:
+                 bookings:
+                    required:
+                        oa_cust_code: slclient.cu_cust_code
+                        oa_cand_no: params.candId
+                 timepool:
+                    required:
+                        tp_booking_no: bookings.oa_booking_no
+                        tp_extranet_status:
+                            in: |
+                                Paid
+                                Submitted
+                                Approved
+                                Entered
+                    optional:
+                        tp_booking_no: params.bookingNo
+        ListCandidates:
+            type: select
+            database:   mysql
+            table:
+                cands: "*"
+        ListCustomers:
+            type: select
+            database:   mysql
+            table:
+                slcust: |
+                    cu_cust_code
+                    cu_name
+        GetCustomer:
+            type: select
+            database:   mysql
+            table:
+                slcust: "*"
+            where:
+                slcust:
+                    required:
+                        cu_cust_code: params.cust_code
+        GetOpenJobs:
+            type: select
+            database:   mysql
+            table:
+                job: "*"
+            where:
+                job:
+                    required:
+                        jb_job_status: Open
+        GetJobDetails:
+            type: select
+            database:   mysql
+            table:
+                job: "*"
+            where:
+                job:
+                    required:
+                        jb_job_no: params.jobNo
+        GetRateCodes:
+            type: select
+            database:   mysql
+            table:
+                ratecode: "*"
+        GetBookingRateCodes:
+            type: select
+            database:   mysql
+            default:
+                params:
+                    candId: 540180
+            table:
+                bookings: |
+                    oa_booking_no
+                    oa_contractcust
+                    oa_payrate_no__1
+                    oa_payrate_no__2
+                    oa_payrate_no__3
+                    oa_payrate_no__4
+                    oa_payrate_no__5
+                    oa_payrate_no__6
+                    oa_payrate_no__7
+                    oa_payrate_no__8
+            where:
+                bookings:
+                    required:
+                        oa_cand_no: params.candId
+        GetBookingDetails:
+            type: select
+            database:   mysql
+            table:
+                bookings: "*"
+            where:
+                bookings:
+                    required:
+                        oa_booking_no: params.bookingNo
+        GetBookings:
+            type: select
+            database:   mysql
+            default:
+                params:
+                    candId: 540180
+            table:
+                bookings: "*"
+                slclient: cu_name
+            where:
+                bookings:
+                    required:
+                        oa_cand_no: params.candId
+                slclient:
+                    required:
+                        cu_cust_code: bookings.oa_cust_code
+        GetBookingTimesheets:
+            type: select
+            database:   mysql
+            table:
+                timepool: "*"
+            where:
+                timepool:
+                    required:
+                        tp_booking_no: params.bookingNo
+        GetTimesheetById:
+            type: select
+            database:   mysql
+            table:
+                timepool: "*"
+                bookings: oa_assignment
+                slclient: cu_name
+                cands: "*"
+            where:
+                timepool:
+                    required:
+                        tp_timesheet_no: params.timesheetNo
+                bookings:
+                    required:
+                        oa_booking_no: timepool.tp_booking_no
+                slclient:
+                    required:
+                        cu_cust_code: bookings.oa_cust_code
+                cands:
+                    required:
+                        cand_cand_no: bookings.oa_cand_no
+        GetTimesheet:        
+            type: select
+            database:   mysql
+            table:
+                timepool: "*"
+                bookings: |
+                    oa_rate_hours__1
+                    oa_rate_hours__2
+                    oa_rate_hours__3
+                    oa_rate_hours__4
+                    oa_rate_hours__5
+                    oa_rate_hours__6
+                    oa_rate_hours__7
+                    oa_rate_hours__8
+            where:
+                timepool:
+                    required:
+                        tp_booking_no: params.bookingNo
+                        tp_week_date: params.weekEndDate
+                bookings:
+                    required:
+                        oa_booking_no: timepool.tp_booking_no
+        GetBlankTimesheets:
+            type: select
+            database:   mysql
+            default:
+                params:
+                    candId: 540180
+            table:
+                timepool: |
+                    tp_timesheet_no
+                    tp_week_date
+            where:
+                timepool:
+                    required:
+                        tp_booking_no: bookings.oa_booking_no
+                bookings:
+                    required:
+                        oa_cand_no: params.candId
+                        oa_booking_no: params.bookingNo
+        GetTimesheetHistory2:
+            default:
+                params:
+                    candNo: 540180
+            type: select
+            database:   mysql
+            table:
+                timepool: |
+                    tp_timesheet_no
+                    tp_extranet_status
+                    tp_week_date
+                    tp_week_no
+                    tp_json_entry
+                    tp_hours_tot
+                    tp_extranet_queried
+                    tp_extranet_query_type
+                    tp_extranet_query_reason
+                    tp_not_working
+                    tp_comment
+                bookings: |
+                    oa_booking_no
+                    oa_assignment
+                slclient: cu_name
+            where:
+                timepool:
+                    required:
+                        tp_booking_no: bookings.oa_booking_no
+                bookings:
+                    required:
+                        oa_cand_no: params.candNo
+                slclient:
+                    required:
+                        cu_cust_code: oa_cust_code
+        UpdateTimesheet:
+            type: update
+            database:   mysql
+            table: timepool
+            where:
+                timepool:
+                    required:
+                        tp_timesheet_no: params.timesheetNo
+        NewTimesheet:
+            type: insert
+            database:   mysql
+            table: timepool
+        GetUserDetails:
+            type: select
+            database:   system
+            default:
+                params:
+                    code: GH
+            table: 
+                users: "*"
+                usersettings: "*"
+            fromperl:
+                usersettings: settings
+            where:
+                users:
+                    required:
+                        code: params.code
+    #                        in: |
+    #                            LW
+    #                            NG
+    #                            SB
+    #                            LR
+    #                            PJD
+    #                            MJ
+    #                            PE
+    #                            JC
+    #                            DD
+    #                            SW
+    #                            RM
+    #                            LH
+    #                            JP
+    #                            GH
+    #                            SF
+    #                            JD
+    #                            IM
+    #                            NJ
+    #                            CH
+    #                            MOR
+    #                            NT
+    #                            BH
+                usersettings:
+                    required:
+                        login: users.login
 

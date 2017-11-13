@@ -3,9 +3,11 @@
 use strict;
 use warnings;
 use FindBin;
-#use Carp::Always;
-use lib "$FindBin::Bin/../lib";
+use lib ( "$FindBin::Bin/../lib",
+	"$FindBin::Bin/../perl5lib",
+	);
 
+#use Carp::Always;
 use Plack::Builder;
 use Plack::Middleware::CrossOrigin;
 use Dancer2::Debugger;

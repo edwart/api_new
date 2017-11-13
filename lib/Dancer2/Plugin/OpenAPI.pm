@@ -1,5 +1,6 @@
 package Dancer2::Plugin::OpenAPI;
 
+#use Dancer2 qw/ flatten /;
 use Dancer2::Plugin;
 use Dancer2::Plugin::OpenAPI::Core;
 use Data::Dumper;
@@ -12,6 +13,7 @@ register OpenAPI => sub {
     my $self = shift;
     my $conf = plugin_setting();
     my $conf2 = $self->config();
+#	debug to_dumper { conf => $conf, conf2 => $conf2 };
     if ($self->config->{apiconfigfile}) {
         $conf = $self->config->{apiconfigfile}
     }
@@ -29,39 +31,16 @@ register OpenAPI => sub {
                 warn "ERROR: no operationId specified in spec for ".Dumper $config->{path};
             }
             my $class = $app->{calling_class} || $app->{name};
-            my $callback = join('::', $class, 'process_query');
-
-=pod
-
-            if ($path =~ m/\?(.*)$/) {
-                my @regexp = ();
-                my $pars = $1;
-                my @pars = split(/\&/, $pars);
-                foreach my $par (@pars) {
-                   my ($what, $val ) = split('=', $par);
-                   $what =~ m/\{(\w+)\}/;
-                   $fieldname = $1;
-                   $what =~ s/\{/(/;
-                   $what =~ s/\}/)/;
-                    push(@regexp, "$what=(?<$fieldname>\\w+)");
-                    warn Dumper { regexp => \@regexp };
-                }
-                my $newregexp = '?(('. join('|', @regexp). ')&?)*!gx';
-                    warn Dumper { newregexp => $newregexp };
-                $path =~ s/\?(.*)$/$newregexp/e;
-                    warn Dumper { path => $path };
-            }
-
-=cut
+	    my $callback = join('::', $class, 'process_query');
 
             $path =~ s!/{(\w+)}!/:$1!g;
-#            $path =~ s/^/qr\£/;
-#            $path =~ s/$/\£/;
             warn "add_route(method => $http_method, regexp => $path, callback => $callback)";
             $self->app->add_route(
                         method =>  $http_method,
                         regexp => $path,
                         code => sub { $callback->({apiconfig =>$apiconfig,
+                                             obj => $self,
+                                             app => $self->app,
                                                    operationId => $config->{$http_method }->{operationId},
                                                    pathconfig => $config,
                                                    method => $http_method,
@@ -73,6 +52,11 @@ register OpenAPI => sub {
 
     return $obj;
 };
+sub callback {
+warn "In callback";
+warn Dumper { params => \@_ };
+print Dumper { params => \@_ };
+}
 
 register_plugin;
 1;
